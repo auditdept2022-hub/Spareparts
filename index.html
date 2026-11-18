@@ -30,7 +30,7 @@
    <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
    <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="remarks">With remarks</option></select>
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select>
-   <button class="ghost" id="sortBtn">Sort A–Z</button><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="backupBtn">Backup JSON</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
+   <button class="ghost" id="sortBtn">Sort A–Z</button><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="backupBtn">Backup JSON</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
   <div id="checkerSummary" class="checker-summary"></div>
   <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
@@ -52,10 +52,11 @@
    <div class="field"><label>SRP</label><input id="fSrp" type="number" step="0.01" min="0"></div>
    <div class="field"><label>Cost</label><input id="fCost" type="number" step="0.01" min="0"></div>
    <div class="field"><label>End Inv.</label><input id="fEnd" type="number" step="1"></div>
-   <div class="field"><label>Profile</label><select id="fProfile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
+   <div class="field"><label>Profile / active counter</label><select id="fProfile" disabled><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
    <div class="field"><label>Count date</label><select id="fDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select></div>
    <div class="field full"><label>Location</label><input id="fLocation" placeholder="e.g. Warehouse / Shelf A" required></div>
-   <div class="field full"><label>Physical count</label><input id="fCount" type="number" step="1" placeholder="Enter counted quantity"></div>
+   <div class="field full"><label>Physical count</label><input id="fCount" type="number" step="1" min="0" placeholder="Enter counted quantity"><small id="existingCountNote" style="display:block;color:var(--muted);margin-top:6px">No count entered for this date yet.</small><button type="button" class="ghost" id="clearCountBtn" style="display:none;margin-top:8px">Clear this date's count</button></div>
+   <div class="field full"><label>Count revision history</label><div id="countHistoryList" class="history" style="border:1px solid var(--line);border-radius:10px;max-height:180px;overflow:auto;padding:9px"><small style="color:var(--muted)">No count revisions recorded.</small></div></div>
    <div class="field full"><label>Remarks</label><textarea id="fRemarks" placeholder="Add observations, discrepancies, or notes..."></textarea></div>
   </div></form>
  </div><div class="modalfoot"><button class="ghost" id="cancelModal">Cancel</button><button class="primary" id="saveBtn">Save changes</button></div>
@@ -65,27 +66,109 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz8I3-QNdbkqOgyAnwpd2hc80sxmyaUsEzJnPuqgUKRySj7eBZRe-4I-bzkvofnJ70Z8w/exec";
 const PROFILES = ["Edison","Karl","Laurence","Genesis"];
 const COUNT_FIELDS = ["Count (12/3/26)","Count (12/4/26)","Count (12/5/26)","Count (12/6/26)"];
+const IMPORT_FIELDS = ["Part no.","Part Description","SRP","Cost","End Inv."];
 const COUNT_BY_FIELDS = COUNT_FIELDS.map(f=>"Counted By ("+f.slice(7,-1)+")");
 const HEADERS = ["Part no.","Part Description","SRP","Cost","End Inv.","Status","Balance","Profile","Location",...COUNT_FIELDS,...COUNT_BY_FIELDS,"Remarks","Updated By","Updated At","Version"];
 const $ = id => document.getElementById(id);
-let records=[], activity=[], page=1, pageSize=40, editId=null, activeTab="inventory";
-let queue=JSON.parse(localStorage.getItem("parts_queue")||"[]");
 let localRecords=JSON.parse(localStorage.getItem("parts_records")||"[]");
+let records=localRecords, activity=[], countHistory=[], page=1, pageSize=40, editId=null, activeTab="inventory";
+let conflictDrafts=JSON.parse(localStorage.getItem("parts_conflicts")||"[]");
+let modalRecord=null, clearCountRequested=false, currentConflictDraftId=null;
+let queue=JSON.parse(localStorage.getItem("parts_queue")||"[]");
+let syncCursors=JSON.parse(localStorage.getItem("parts_cursors")||"null");
 let activeProfile=localStorage.getItem("parts_profile")||"Edison";
 $("profile").value=activeProfile;
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
-function saveLocal(){localRecords=records;localStorage.setItem("parts_records",JSON.stringify(records));localStorage.setItem("parts_queue",JSON.stringify(queue));$("pendingSync").textContent=queue.length}
+function saveLocal(){localRecords=records;localStorage.setItem("parts_records",JSON.stringify(records));localStorage.setItem("parts_queue",JSON.stringify(queue));localStorage.setItem("parts_conflicts",JSON.stringify(conflictDrafts));$("pendingSync").textContent=queue.length;const b=$("conflictBtn");if(b){b.style.display=conflictDrafts.length?"inline-block":"none";b.textContent=`Review conflicts (${conflictDrafts.length})`}}
 function setNet(){let on=navigator.onLine;$("netdot").classList.toggle("online",on);$("netlabel").textContent=on?"Online":"Offline"}
-window.addEventListener("online",()=>{setNet();if(queue.length)syncQueue();else load()});window.addEventListener("offline",setNet);
+window.addEventListener("online",()=>{setNet();if(queue.length)syncQueue();else refreshFromSheets()});window.addEventListener("offline",setNet);
 function jsonp(params){return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},25000);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
 async function postApi(action,payload){return jsonp({action,payload:JSON.stringify(payload)})}
-function recordKey(r){return String(r["Part no."]||"").trim().toUpperCase()+"¦"+String(r.Location||"").trim().toUpperCase()}
+function recordKey(r){return String(r["Part no."]||"").trim().toUpperCase()+"\u001f"+String(r.Location||"").trim().toUpperCase()}
 function normalize(r){let o={...r};HEADERS.forEach(h=>{if(o[h]===undefined)o[h]=""});o.id=String(r.id||recordKey(o));return o}
-async function load(){setNet();if(!navigator.onLine){records=localRecords;render();toast("Offline mode: showing saved records");return}
- try{let res=await jsonp({action:"list"});records=(res.records||[]).map(normalize);localRecords=records;saveLocal();activity=res.activity||[];render();renderHistory()}catch(e){records=localRecords;render();toast("Using local data: "+e.message)}}
-async function refreshFromSheets(){if(!navigator.onLine||queue.length||isSyncing||$("editModal").classList.contains("show"))return;try{let res=await jsonp({action:"list"});records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];saveLocal();render();renderHistory()}catch(e){}}
-setInterval(refreshFromSheets,30000);
-let isSyncing=false;async function syncQueue(){if(!navigator.onLine||!queue.length||isSyncing)return;isSyncing=true;let failed=false,conflict=false;try{while(navigator.onLine&&queue.length){let item=queue[0];try{if(item.action==="import")await postApi("import",item.payload);else await jsonp({action:item.action,payload:JSON.stringify(item.payload)});queue.shift();saveLocal()}catch(e){if(String(e.message||e).includes("CONFLICT:")){queue.shift();saveLocal();conflict=true;}else failed=true;break}}}finally{isSyncing=false}if(conflict){await load();toast("Another user changed this record. Latest Google Sheets data loaded; please review and reapply your change.");}else if(!queue.length){toast("All changes synchronized");await load();if(window.__importCount){let want=window.__importCount;window.__importCount=0;toast("Import confirmed by Google Sheets: "+want+" source rows processed.");}}else if(failed)toast("Some changes are still waiting to sync")}
+function saveCursors(){localStorage.setItem("parts_cursors",JSON.stringify(syncCursors||{changes:0,activity:0,history:0}))}
+function applyDeltaRecord(change){
+ const id=String(change.id||change.record?.id||"");
+ if(change.operation==="delete"){
+  records=records.filter(r=>String(r.id)!==id);
+  return true;
+ }
+ if(!change.record||!change.record["Part no."])return false;
+ const next=normalize(change.record);
+ let index=records.findIndex(r=>String(r.id)===id||recordKey(r)===recordKey(next));
+ if(index>=0)records[index]=next;else records.unshift(next);
+ return true;
+}
+async function load(){
+ setNet();
+ if(!navigator.onLine){records=localRecords;render();return}
+ // Full inventory is fetched only on first installation/no cache cursor. Later sessions use deltas.
+ const hasCursor=!!syncCursors;
+ if(hasCursor){records=localRecords;render();if(queue.length){syncQueue();return}await refreshFromSheets();return}
+ try{
+  let res=await jsonp({action:"list"});
+  records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];countHistory=res.countHistory||[];
+  syncCursors=res.cursors||{changes:0,activity:activity.length,history:countHistory.length};saveCursors();saveLocal();render();renderHistory();
+  if(queue.length)syncQueue();
+ }catch(e){records=localRecords;render();toast("Using cached data: "+e.message)}
+}
+let isSyncing=false;
+async function refreshFromSheets(){
+ if(!navigator.onLine||queue.length||isSyncing||document.hidden||$("editModal").classList.contains("show"))return;
+ if(!syncCursors){await load();return}
+ let anyChanged=false,more=true,rounds=0;
+ try{
+  while(more&&rounds++<10){
+   const res=await jsonp({action:"changes",since:syncCursors.changes||0,activitySince:syncCursors.activity||0,historySince:syncCursors.history||0});
+   if(res.resetRequired){syncCursors=null;localStorage.removeItem("parts_cursors");await load();return}
+   (res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
+   if(res.activity?.length){activity=[...res.activity.reverse(),...activity].slice(0,150);anyChanged=true}
+   if(res.countHistory?.length){countHistory=[...res.countHistory.reverse(),...countHistory].slice(0,500);anyChanged=true}
+   syncCursors=res.cursors||syncCursors;saveCursors();
+   more=!!res.more;
+  }
+  if(anyChanged){saveLocal();render();renderHistory()}
+ }catch(e){/* Keep the last confirmed local cache; retry on the next light check. */}
+}
+window.setInterval(refreshFromSheets,15000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshFromSheets()});
+async function syncQueue(){
+ if(!navigator.onLine||!queue.length||isSyncing)return;
+ isSyncing=true;let failed=false,conflictCount=0;
+ try{
+  while(navigator.onLine&&queue.length){
+   let item=queue[0];
+   try{
+    let response=item.action==="import"?await postApi("import",item.payload):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
+    if(item.action==="import"&&window.__importResult){window.__importResult.imported+=Number(response.imported||0);window.__importResult.added+=Number(response.added||0);window.__importResult.updated+=Number(response.updated||0)}
+    // If the same device queued another edit to this exact record, chain it from the
+    // version just confirmed by the server. Other-user edits still trigger conflict checks.
+    if(item.action==="save"&&response.version!==undefined){
+     const savedId=String(response.id||item.payload.id||"");
+     const nextSame=queue.slice(1).find(next=>next.action==="save"&&String(next.payload?.id||"")===String(item.payload.id||""));
+     if(nextSame){nextSame.payload.expectedVersion=Number(response.version);nextSame.payload.id=savedId}
+    }
+    queue.shift();saveLocal();
+   }catch(e){
+    if(String(e.message||e).includes("CONFLICT:")){
+     conflictDrafts.unshift({id:String(Date.now())+"_"+String(Math.floor(Math.random()*1e6)),action:item.action,payload:item.payload,reason:String(e.message||e),createdAt:new Date().toISOString()});
+     queue.shift();saveLocal();conflictCount++;
+    }else{failed=true;break}
+   }
+  }
+ }finally{isSyncing=false}
+ // Reconcile only rows changed since this device's last cursor. Never reload the full Inventory here.
+ await refreshFromSheets();
+ if(conflictCount)toast(`${conflictCount} edit(s) conflicted. Your changes are preserved; review and reapply them against the latest record.`);
+ else if(!queue.length&&!failed){
+  if(window.__importCount){let want=window.__importCount,result=window.__importResult||{imported:0,added:0,updated:0};window.__importCount=0;window.__importResult=null;
+   if(result.imported===want)toast(`Google Sheets confirmed ${result.imported} rows: ${result.added} added, ${result.updated} matched.`);
+   else toast(`Google Sheets confirmed ${result.imported} of ${want} rows. Check the import activity and retry remaining rows.`);
+  }else toast("All changes synchronized with Google Sheets");
+ }
+ if(failed)toast("Some changes are still waiting to sync. Your local cache is retained; synchronization will retry when the connection is stable.");
+}
+
 function currentDate(){return $("countDate").value}
 function isCounted(v){return v!==""&&v!==null&&v!==undefined}
 function isVariance(r,dt){let c=r[dt],e=r["End Inv."];return isCounted(c)&&isCounted(e)&&Number.isFinite(Number(c))&&Number.isFinite(Number(e))&&Number(c)!==Number(e)}
@@ -100,32 +183,61 @@ function render(){let q=$("search").value.trim().toLowerCase(),filter=$("filter"
  $("pendingSync").textContent=queue.length;saveLocal()}
 function countCell(v,id,variance=false){return `<span class="pill ${variance?'bad':isCounted(v)?'done':'pending'}">${!isCounted(v)?"Not counted":esc(v)+(variance?' · variance':'')}</span>`}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function attr(v){return encodeURIComponent(String(v??"" )).replace(/['!()*]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase())}function money(v){return v===""||v===null?"—":Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
-function openModal(r=null){editId=r?r.id:null;$("modalTitle").textContent=r?"Edit part":"Add part";$("modalProfile").textContent=activeProfile;$("fPart").value=r?.["Part no."]||"";$("fPart").disabled=false;$("fDesc").value=r?.["Part Description"]||"";$("fSrp").value=r?.SRP??"";$("fCost").value=r?.Cost??"";$("fEnd").value=r?.["End Inv."]??"";$("fLocation").value=r?.Location||"";$("fProfile").value=activeProfile;$("fDate").value=currentDate();$("fCount").value=r?.[currentDate()]??"";$("fRemarks").value=r?.Remarks||"";$("editModal").classList.add("show")}
-function closeModal(){$("editModal").classList.remove("show")}
+function openModal(r=null){modalRecord=r?{...r}:null;editId=r?r.id:null;clearCountRequested=false;currentConflictDraftId=null;$('modalTitle').textContent=r?"Edit part":"Add part";$('modalProfile').textContent=activeProfile;$('fPart').value=r?.["Part no."]||"";$('fPart').disabled=false;$('fDesc').value=r?.["Part Description"]||"";$('fSrp').value=r?.SRP??"";$('fCost').value=r?.Cost??"";$('fEnd').value=r?.["End Inv."]??"";$('fLocation').value=r?.Location||"";$('fProfile').value=activeProfile;$('fDate').value=currentDate();$('fCount').value=r?.[currentDate()]??"";$('fRemarks').value=r?.Remarks||"";$('existingCountNote').textContent="";$('editModal').classList.add("show");updateCountContext()}
+function updateCountContext(){const date=$('fDate').value, value=modalRecord?.[date], byField="Counted By ("+date.slice(7,-1)+")", by=modalRecord?.[byField]||modalRecord?.Profile||"Unknown";const note=$('existingCountNote');if(isCounted(value)){note.textContent=`Existing count: ${value} (entered by ${by}). Saving a changed number edits this same count; it does not create a duplicate. Every revision is recorded.`;$('clearCountBtn').style.display='inline-block'}else{note.textContent="No count entered for this date yet. Entering a quantity will create the first count for this date.";$('clearCountBtn').style.display='none'}const part=String(modalRecord?.["Part no."]||"").trim().toUpperCase(),loc=String(modalRecord?.Location||"").trim().toUpperCase();const history=countHistory.filter(x=>String(x.partNo||"").trim().toUpperCase()===part&&String(x.location||"").trim().toUpperCase()===loc&&String(x.date||"")===date);$('countHistoryList').innerHTML=history.length?history.map(x=>`<div class="historyitem"><div><b>${esc(x.previous??'blank')} → ${esc(x.current??'blank')}</b><br><small>${esc(x.editedBy||'Unknown')} · ${esc(x.at?new Date(x.at).toLocaleString():'')}</small></div><small>${esc(x.previousBy?'Previous counter: '+x.previousBy:'')}</small></div>`).join(''):'<small style="color:var(--muted)">No revisions recorded for this part, location, and date.</small>'}
+function closeModal(){ $('editModal').classList.remove("show");clearCountRequested=false;currentConflictDraftId=null }
+function cancelEdit(){closeModal()}
+$('fDate').onchange=()=>{if(modalRecord)$('fCount').value=modalRecord[$('fDate').value]??"";clearCountRequested=false;updateCountContext()};
+$('fCount').oninput=()=>{if(clearCountRequested)clearCountRequested=false};
+$('clearCountBtn').onclick=()=>{if(!modalRecord||!isCounted(modalRecord[$('fDate').value]))return;if(!confirm(`Clear the existing count for ${$('fDate').selectedOptions[0].textContent}? The previous value will remain in Count History.`))return;$('fCount').value="";clearCountRequested=true;$('existingCountNote').textContent="This count will be cleared when you save. The old value will remain in Count History."};
 window.editPart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(r)openModal(r)}
 window.quickCount=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;openModal(r);$("fCount").focus()};
+async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts to review");return}if(!navigator.onLine){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts[0];if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
+$('conflictBtn').onclick=reviewConflicts;
 window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(navigator.onLine?"Delete submitted…":"Delete queued until online");if(navigator.onLine)syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
 function downloadFile(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
 function csvEscape(v){let s=String(v??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 function exportCSV(){const rows=[HEADERS.join(','),...records.map(r=>HEADERS.map(h=>csvEscape(r[h])).join(','))];downloadFile('parts-inventory-'+new Date().toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');toast('CSV export created')}
-function exportBackup(){const data={app:'Parts Inventory',version:1,createdAt:new Date().toISOString(),records,activity,pendingChanges:queue};downloadFile('parts-inventory-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');toast('Full JSON backup created')}
+function exportBackup(){const data={app:'Parts Inventory',version:1,createdAt:new Date().toISOString(),records,activity,countHistory,pendingChanges:queue,conflictDrafts};downloadFile('parts-inventory-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');toast('Full JSON backup created')}
 function parseCSV(text){let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i],n=text[i+1];if(quoted){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')quoted=false;else cell+=c}else if(c==='"')quoted=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}if(cell.length||row.length){row.push(cell.replace(/\r$/,''));rows.push(row)}return rows.filter(r=>r.some(v=>String(v).trim()!==''))}
 function normHead(k){return String(k??'').replace(/^\ufeff/,'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim().toLowerCase()}
 function mapHeader(k){let low=normHead(k);if(!low)return null;const aliases={'part no.':'Part no.','part no':'Part no.','part number':'Part no.','part #':'Part no.','part description':'Part Description','description':'Part Description','srp':'SRP','cost':'Cost','end inv.':'End Inv.','end inv':'End Inv.','end inventory':'End Inv.','profile':'Profile','location':'Location','remarks':'Remarks','remark':'Remarks','updated by':'Updated By','updated at':'Updated At'};if(aliases[low])return aliases[low];let exact=HEADERS.find(h=>normHead(h)===low);if(exact)return exact;let m=low.match(/count\s*\(?\s*(\d{1,2})\s*[\/\-.]\s*(\d{1,2})(?:\s*[\/\-.]\s*(\d{2,4}))?\s*\)?/);if(m){let f=COUNT_FIELDS.find(c=>{let d=c.match(/\((\d+)\/(\d+)\/(\d+)\)/);return d&&+d[1]===+m[1]&&+d[2]===+m[2]});if(f)return f}return null}
-function importedRecord(source){let out=Object.fromEntries(HEADERS.map(h=>[h,'']));Object.entries(source||{}).forEach(([k,v])=>{let target=mapHeader(k);if(target){if(v===null||v===undefined)v='';if(typeof v==='string')v=v.trim();out[target]=v}});out.id=String(source.id||out['Part no.']||'').trim();out['Part no.']=String(out['Part no.']??'').trim();return out}
+function importedRecord(source){let out=Object.fromEntries(IMPORT_FIELDS.map(h=>[h,'']));Object.entries(source||{}).forEach(([k,v])=>{let target=mapHeader(k);if(IMPORT_FIELDS.includes(target)){if(v===null||v===undefined)v='';if(typeof v==='string')v=v.trim();out[target]=v}});out['Part no.']=String(out['Part no.']??'').trim();return out}
+function validateImportColumns(items){if(!Array.isArray(items)||!items.length)throw Error('The selected file contains no inventory rows');let available=new Set(Object.keys(items[0]||{}).map(mapHeader).filter(x=>IMPORT_FIELDS.includes(x)));let missing=IMPORT_FIELDS.filter(x=>!available.has(x));if(missing.length)throw Error('The import file must contain these five columns: '+IMPORT_FIELDS.join(', ')+'. Missing: '+missing.join(', '))}
 function loadSheetJS(){return new Promise((res,rej)=>{if(window.XLSX)return res();let s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res();s.onerror=()=>rej(Error('Could not load the Excel reader. Check your internet connection or save the file as CSV.'));document.head.appendChild(s)})}
-async function readExcel(file){await loadSheetJS();let wb=XLSX.read(await file.arrayBuffer(),{type:'array'});let best=null;for(const name of wb.SheetNames){let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:''});let hi=rows.findIndex(r=>r.some(c=>mapHeader(c)==='Part no.'));if(hi<0)continue;let heads=rows[hi];let score=heads.filter(h=>mapHeader(h)).length;if(!best||score>best.score)best={score,heads,data:rows.slice(hi+1)}}if(!best)throw Error('No sheet with a "Part no." column was found');return best.data.filter(r=>r.some(v=>String(v).trim()!=='')).map(r=>Object.fromEntries(best.heads.map((h,i)=>[h,r[i]??'']).filter(([h])=>String(h).trim()!=='')))}
-async function importFile(file){let items=[],lname=file.name.toLowerCase(),text='';if(/\.xlsx?$/.test(lname)){items=await readExcel(file)}else{text=await file.text()}if(/\.xlsx?$/.test(lname)){}else if(lname.endsWith('.json')){let parsed=JSON.parse(text);items=Array.isArray(parsed)?parsed:(parsed.records||parsed.data||[]);if(!Array.isArray(items))throw Error('JSON file does not contain a records array')}else{let rows=parseCSV(text);if(rows.length<2)throw Error('CSV has no inventory records');let heads=rows.shift();items=rows.map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])))}
- let normalized=items.map(importedRecord).filter(r=>r['Part no.']);if(!normalized.length)throw Error('No valid part numbers found in the selected file');if(normalized.some(r=>!String(r.Location||'').trim())){let defaultLoc=prompt('This file has blank Location cells. Enter the location for these records (required to keep each branch count separate):');if(defaultLoc===null||!defaultLoc.trim())throw Error('Import cancelled: a location is required. No data was changed.');normalized.forEach(r=>{if(!String(r.Location||'').trim())r.Location=defaultLoc.trim()})}let map=new Map(records.map(r=>[recordKey(r),r]));if(!confirm(`Merge ${normalized.length} imported part/location records into Google Sheets? Existing locations are updated; other locations are kept.`))return;let replace=false;
- let next=replace?new Map():map;normalized.forEach(r=>{let id=recordKey(r);r.id=id;r['Updated By']=activeProfile;r['Updated At']=new Date().toISOString();next.set(id,{...(next.get(id)||{}),...r})});window.__importCount=normalized.length;const batchSize=5;if(!navigator.onLine)throw Error('Connect to the internet before importing so the records are saved directly to Google Sheets.');for(let i=0;i<normalized.length;i+=batchSize){enqueue('import',{records:normalized.slice(i,i+batchSize),by:activeProfile})}toast(`Sending ${normalized.length} records to Google Sheets…`);if(navigator.onLine)syncQueue();else toast('Import requires an internet connection. No local-only import was applied.')}
+async function readExcel(file){await loadSheetJS();let wb=XLSX.read(await file.arrayBuffer(),{type:'array'});let best=null;for(const name of wb.SheetNames){let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:''});let hi=rows.findIndex(r=>r.some(c=>mapHeader(c)==='Part no.'));if(hi<0)continue;let heads=rows[hi];let mapped=heads.map(mapHeader);let complete=IMPORT_FIELDS.every(f=>mapped.includes(f));if(!complete)continue;let score=IMPORT_FIELDS.filter(f=>mapped.includes(f)).length;if(!best||score>best.score)best={score,heads,data:rows.slice(hi+1)}}if(!best)throw Error('No worksheet contains all five required columns: '+IMPORT_FIELDS.join(', '));return best.data.filter(r=>r.some(v=>String(v).trim()!=='')).map(r=>Object.fromEntries(best.heads.map((h,i)=>[h,r[i]??'']).filter(([h])=>String(h).trim()!=='')))}
+async function importFile(file){
+ let items=[],lname=file.name.toLowerCase(),text='';
+ if(/\.xlsx?$/.test(lname)){items=await readExcel(file)}
+ else{
+  text=await file.text();
+  if(lname.endsWith('.json')){let parsed=JSON.parse(text);items=Array.isArray(parsed)?parsed:(parsed.records||parsed.data||[]);if(!Array.isArray(items))throw Error('JSON file does not contain a records array')}
+  else{let rows=parseCSV(text);if(rows.length<2)throw Error('CSV has no inventory records');let heads=rows.shift();items=rows.map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])))}
+ }
+ validateImportColumns(items);
+ const normalized=items.map(importedRecord).filter(r=>r['Part no.']&&r['Part no.'].toLowerCase()!=='total');
+ if(!normalized.length)throw Error('No valid part numbers found in the selected file');
+ if(!navigator.onLine)throw Error('Connect to the internet before importing. No import was queued or saved only on this device.');
+ const duplicateCount=normalized.length-new Set(normalized.map(r=>r['Part no.'].toUpperCase())).size;
+ const message=`Import ${normalized.length} catalog rows into Google Sheets?\n\nOnly these columns will be imported: Part no., Part Description, SRP, Cost, and End Inv.\nAll other columns will stay blank on new rows. Existing location/count records will not be overwritten.${duplicateCount?`\n\nDuplicate part numbers in this file: ${duplicateCount}`:''}`;
+ if(!confirm(message))return;
+ window.__importCount=normalized.length;
+ window.__importResult={imported:0,added:0,updated:0};
+ const batchSize=5;
+ for(let i=0;i<normalized.length;i+=batchSize)enqueue('import',{records:normalized.slice(i,i+batchSize),by:activeProfile});
+ toast(`Sending ${normalized.length} catalog rows to Google Sheets…`);
+ syncQueue();
+}
 $('importBtn').onclick=()=>$('fileInput').click();$('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;try{await importFile(f)}catch(err){toast('Import failed: '+err.message)}finally{e.target.value=''}};$('csvBtn').onclick=exportCSV;$('backupBtn').onclick=exportBackup;
-$("saveBtn").onclick=()=>{let p=$("partForm");if(!p.reportValidity())return;let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Profile:$("fProfile").value,Location:$("fLocation").value,Remarks:$("fRemarks").value,"Updated By":activeProfile,"Updated At":new Date().toISOString(),expectedVersion:editId?(records.find(x=>String(x.id)===String(editId))?.Version||0):0};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!==""){obj[date]=$("fCount").value;obj.Profile=activeProfile;}let action="save";let nextPartNo=obj["Part no."];if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===recordKey(obj))){toast("This part already exists at this location");return}obj.id=editId||recordKey(obj);if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:recordKey(obj)}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:recordKey(obj)})}enqueue(action,obj);closeModal();render();toast(navigator.onLine?"Saved; syncing…":"Saved offline; will sync later");if(navigator.onLine)syncQueue()};
-$("addBtn").onclick=()=>openModal();$("closeModal").onclick=closeModal;$("cancelModal").onclick=closeModal;$("editModal").onclick=e=>{if(e.target===$("editModal"))closeModal()};
+$("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(navigator.onLine?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(navigator.onLine)syncQueue()};
+$("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
 let sortAsc=false;$("sortBtn").onclick=()=>{sortAsc=!sortAsc;records.sort((a,b)=>String(a["Part no."]||"").localeCompare(String(b["Part no."]||""),undefined,{numeric:true,sensitivity:"base"})*(sortAsc?1:-1));$("sortBtn").textContent=sortAsc?"Sort Z–A":"Sort A–Z";page=1;render()};$("search").oninput=()=>{page=1;render()};$("filter").onchange=()=>{page=1;render()};$("countDate").onchange=()=>{page=1;render()};$("prev").onclick=()=>{page--;render()};$("next").onclick=()=>{page++;render()};
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));$("inventoryView").style.display=activeTab==="inventory"?"":"none";$("activityView").style.display=activeTab==="activity"?"":"none"});
 function renderHistory(){$("history").innerHTML=activity.slice(0,150).map(a=>`<div class="historyitem"><div><b>${esc(a.action||"Updated")}</b> · ${esc(a.partNo||"") }<br><small>${esc(a.by||"Unknown")} · ${esc(a.at||"")}</small></div><small>${esc(a.details||"")}</small></div>`).join("")||`<div class="empty">No activity recorded yet.</div>`}
+saveLocal();
+render();
 load();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
