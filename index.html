@@ -45,6 +45,8 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 /* Compact edit/count popup on mobile */
 @media(max-width:760px){
 .modalback{padding:6px}
+/* LOCK PAGE SCROLL WHILE A POPUP IS OPEN */
+html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-behavior:none}.modalback{overscroll-behavior:contain}.modalback .modal{overscroll-behavior:contain}
 .modal{max-height:98vh;border-radius:14px}
 .modalhead{padding:8px 10px;position:sticky;top:0;background:#fff;z-index:2}
 .modalhead h2{font-size:15px}
@@ -133,10 +135,9 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .compactinfo{margin-top:2px}
 
 /* POPUP: End Inv. - Location - Count on ONE line */
-.trio{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr);gap:8px}
+.trio{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
 .trio>.field{grid-column:auto!important;min-width:0}
-.trio input{width:100%;text-align:center}
-.trio #fLocation{text-align:left}
+.trio input{width:100%;text-align:left}
 .countextras{margin-top:-4px}
 @media(max-width:760px){
  .formgrid>.field:nth-child(3),.formgrid>.field:nth-child(4),.formgrid>.field:nth-child(5),.formgrid>.field:nth-child(6){grid-column:span 3}
@@ -191,9 +192,9 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
    <div class="field"><label>Profile / active counter</label><select id="fProfile" disabled><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
    <div class="field"><label>Count date</label><select id="fDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select></div>
    <div class="trio">
-    <div class="field"><label>End Inv.</label><input id="fEnd" type="number" step="1" inputmode="numeric"></div>
     <div class="field"><label>Location</label><input id="fLocation" placeholder="Shelf / Location" required></div>
     <div class="field"><label>Count</label><input id="fCount" type="number" step="1" min="0" inputmode="numeric" placeholder="Qty"></div>
+    <div class="field"><label>End Inv.</label><input id="fEnd" type="number" step="1" inputmode="numeric"></div>
    </div>
    <div class="field full countextras"><small id="existingCountNote" style="display:block;color:var(--muted)">No count entered for this date yet.</small><button type="button" class="ghost" id="clearCountBtn" style="display:none;margin-top:8px">Clear this date's count</button></div>
    <div class="field full"><label>Count revision history</label><div id="countHistoryList" class="history" style="border:1px solid var(--line);border-radius:10px;max-height:180px;overflow:auto;padding:9px"><small style="color:var(--muted)">No count revisions recorded.</small></div></div>
