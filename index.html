@@ -22,12 +22,11 @@ tbody tr.bal-ok:hover td{background:#c8ebd5}tbody tr.bal-over:hover td{backgroun
 /* SORT ARROWS */
 th.sortable{cursor:pointer;user-select:none}th.sortable .sortarrows{display:inline-flex;flex-direction:column;margin-left:5px;vertical-align:middle;line-height:.75}
 th.sortable .sortarrows i{font-style:normal;font-size:8px;color:#b4bfd0;padding:1px 3px;cursor:pointer}th.sortable .sortarrows i:hover{color:#6d86b0}th.sortable .sortarrows i.on{color:var(--blue)}
-.mobsort{display:none}
 /* LOGO */
 .logo{background:#fff;overflow:hidden;padding:1px}.logo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit}
 /* COLLAPSIBLE TOOLBAR (mobile) */
 .toolbartoggle{display:none}
-@media(max-width:760px){.toolbartoggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;background:#fafbfd;color:#1c3764;padding:8px 12px;font-size:13px}.toolbartoggle i{font-style:normal;color:var(--blue);font-size:10px;margin-left:4px}.toolbar.collapsed{display:none}}
+@media(max-width:760px){.toolbartoggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;background:#fafbfd;color:#1c3764;padding:8px 12px;font-size:13px}.toolbartoggle i{font-style:normal;color:var(--blue);font-size:10px;margin-left:4px}.toolbar.collapsed>*:not(.search):not(.toolbartoggle){display:none}.toolbar .toolbartoggle{flex:1 1 100%;width:100%;border:1px solid var(--line);border-radius:10px;padding:7px 10px}}
 /* COMPACT LAYOUT */
 body{font-size:13px;line-height:1.3}
 .top{padding:8px max(12px,calc((100vw - 1440px)/2))}.logo{width:30px;height:30px;border-radius:9px;font-size:16px}.brand h1{font-size:15px}.top select{padding:6px 8px}
@@ -42,7 +41,7 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .compactid{gap:6px}.compactid strong{font-size:12px}.compactdesc{font-size:12px;margin:0 0 2px}.compactinfo{font-size:11px;gap:8px}
 .compactdetails summary{font-size:10px}.compactdetailgrid{padding:5px 0 0;gap:4px}
 .formgrid{gap:8px}.modalbody{padding:12px}.modalhead{padding:10px 12px}.modalfoot{padding:8px 12px}.field label{margin-bottom:2px}.field input,.field select,.field textarea{padding:7px 9px}
-@media(max-width:760px){.mobsort{display:block}.top{padding:7px 10px}.wrap{padding:8px 8px 36px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.stat{padding:5px 6px}.stat .k{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat strong{font-size:15px}.stat small{display:none}.toolbar{padding:7px}.compactrow{padding:5px 8px}.modalbody,.modalhead{padding:10px}.modalfoot{padding:8px 10px}}
+@media(max-width:760px){.top{padding:7px 10px}.wrap{padding:8px 8px 36px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.stat{padding:5px 6px}.stat .k{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat strong{font-size:15px}.stat small{display:none}.toolbar{padding:7px}.compactrow{padding:5px 8px}.modalbody,.modalhead{padding:10px}.modalfoot{padding:8px 10px}}
 </style>
 </head>
 <body>
@@ -58,12 +57,11 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
   <div class="stat"><div class="k">Pending sync</div><strong id="pendingSync">0</strong><small>Changes saved on this device</small></div>
  </section>
  <section class="panel">
-  <button type="button" class="toolbartoggle" id="toolbarToggle" aria-expanded="false"><span>🔍 Search &amp; filters <i id="toolbarDot" hidden>●</i></span><b id="toolbarArrow">▾</b></button>
-<div class="toolbar" id="toolbar">
-   <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
+  <div class="toolbar" id="toolbar">
+   <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div><button type="button" class="toolbartoggle" id="toolbarToggle" aria-expanded="false"><span>⚙ Filters &amp; actions <i id="toolbarDot" hidden>●</i></span><b id="toolbarArrow">▾</b></button>
    <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select><button class="ghost" id="addDateBtn" title="Add a new count date">＋ Date</button><input type="date" id="newDateInput" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
-   <select id="sortSel" class="mobsort" aria-label="Sort"><option value="">Sort: default</option></select><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
+   <div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
   <div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div>
@@ -453,7 +451,19 @@ async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts 
 $('conflictBtn').onclick=reviewConflicts;
 window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(navigator.onLine?"Delete submitted…":"Delete queued until online");if(navigator.onLine)syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
-function downloadFile(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
+async function nativeSaveShare(name,content,type){
+ try{
+  const {Filesystem,Share}=window.Capacitor.Plugins;
+  let data=content,encoding="utf8";
+  if(typeof content!=="string"){const blob=new Blob([content],{type});data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(blob)});encoding=undefined}
+  const w=await Filesystem.writeFile({path:name,data,directory:"CACHE",...(encoding?{encoding}:{})});
+  await Share.share({title:name,url:w.uri,dialogTitle:"Save or share "+name})
+ }catch(e){if(!/cancel/i.test(String(e&&e.message||e)))toast("Could not export file: "+(e&&e.message||e))}
+}
+function downloadFile(name,content,type){
+ const cap=window.Capacitor;
+ if(cap&&cap.isNativePlatform&&cap.isNativePlatform()&&cap.Plugins&&cap.Plugins.Filesystem&&cap.Plugins.Share){nativeSaveShare(name,content,type);return}
+ const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
 function csvEscape(v){let s=String(v??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 function exportCSV(){const rows=[HEADERS.join(','),...records.map(r=>HEADERS.map(h=>csvEscape(r[h])).join(','))];downloadFile('parts-inventory-'+new Date().toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');toast('CSV export created')}
 function exportBackup(){const data={app:'Parts Inventory',version:1,createdAt:new Date().toISOString(),records,activity,countHistory,pendingChanges:queue,conflictDrafts};downloadFile('parts-inventory-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');toast('Full JSON backup created')}
@@ -608,7 +618,7 @@ $("addDateBtn").onclick=()=>{
 $("newDateInput").onchange=e=>{const v=e.target.value;if(!v)return;const [y,mo,da]=v.split("-").map(Number);if(y<2000||y>2099){toast("Choose a date from 2000 to 2099");return}addCountDate(mo+"/"+da+"/"+String(y).slice(2))};
 function toolbarHidden(){try{const v=localStorage.getItem("parts_toolbar_hidden");return v===null?true:v==="1"}catch(e){return true}}
 function applyToolbarState(){const hid=toolbarHidden();$("toolbar").classList.toggle("collapsed",hid);$("toolbarToggle").setAttribute("aria-expanded",String(!hid));$("toolbarArrow").textContent=hid?"▾":"▴"}
-function updateToolbarToggle(){const dot=$("toolbarDot");if(!dot)return;const active=($("search")?.value.trim()||"")!==""||($("filter")?.value||"all")!=="all"||!!sortKey;dot.hidden=!active}
+function updateToolbarToggle(){const dot=$("toolbarDot");if(!dot)return;const active=($("filter")?.value||"all")!=="all";dot.hidden=!active}
 $("toolbarToggle").onclick=()=>{try{localStorage.setItem("parts_toolbar_hidden",toolbarHidden()?"0":"1")}catch(e){}applyToolbarState()};
 applyToolbarState();
 const SORT_COLS={part:"Part no.",desc:"Part description",srp:"SRP",cost:"Cost",end:"End Inv.",status:"Status",balance:"Balance",profile:"Profile",location:"Location",count:"Count",remarks:"Remarks"};
@@ -616,10 +626,9 @@ const NUM_SORT={srp:1,cost:1,end:1,balance:1,count:1};
 let sortKey="",sortDir="asc";
 function sortVal(r,k,dt){switch(k){case"part":return r["Part no."];case"desc":return r["Part Description"];case"srp":return r.SRP;case"cost":return r.Cost;case"end":return r["End Inv."];case"status":return statusFor(r,dt)==="—"?"":statusFor(r,dt);case"balance":return balanceFor(r,dt);case"profile":return counterFor(r,dt);case"location":return r.Location;case"count":return r[dt];case"remarks":return r.Remarks}return""}
 function sortRows(list,dt){if(!sortKey)return list;const num=!!NUM_SORT[sortKey],dir=sortDir==="asc"?1:-1;const blank=v=>v===""||v===null||v===undefined;return list.map((r,i)=>[r,i]).sort((A,B)=>{const a=sortVal(A[0],sortKey,dt),b=sortVal(B[0],sortKey,dt),ba=blank(a),bb=blank(b);if(ba||bb)return ba&&bb?A[1]-B[1]:ba?1:-1;let c=num?Number(a)-Number(b):String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:"base"});return c?c*dir:A[1]-B[1]}).map(x=>x[0])}
-function updateSortUI(){document.querySelectorAll("th.sortable").forEach(t=>{t.querySelectorAll("i").forEach(i=>i.classList.toggle("on",t.dataset.sort===sortKey&&i.dataset.dir===sortDir))});const s=$("sortSel");if(s)s.value=sortKey?sortKey+"|"+sortDir:""}
+function updateSortUI(){document.querySelectorAll("th.sortable").forEach(t=>{t.querySelectorAll("i").forEach(i=>i.classList.toggle("on",t.dataset.sort===sortKey&&i.dataset.dir===sortDir))});}
 function setSort(k,d){if(sortKey===k&&sortDir===d){sortKey=""}else{sortKey=k;sortDir=d}page=1;updateSortUI();render()}
 document.querySelector("thead").addEventListener("click",e=>{const th=e.target.closest("th.sortable");if(!th)return;const k=th.dataset.sort,ar=e.target.closest("i[data-dir]");if(ar)setSort(k,ar.dataset.dir);else setSort(k,sortKey===k&&sortDir==="asc"?"desc":"asc")});
-(function(){const s=$("sortSel");Object.entries(SORT_COLS).forEach(([k,l])=>{[["asc","▲"],["desc","▼"]].forEach(([d,a])=>{const o=document.createElement("option");o.value=k+"|"+d;o.textContent="Sort: "+l+" "+a;s.appendChild(o)})});s.onchange=()=>{if(!s.value){sortKey=""}else{[sortKey,sortDir]=s.value.split("|")}page=1;updateSortUI();render()}})();
 $("search").oninput=()=>{page=1;render()};$("filter").onchange=()=>{page=1;render()};$("countDate").onchange=()=>{page=1;render()};$("prev").onclick=()=>{page--;render()};$("next").onclick=()=>{page++;render()};
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));$("inventoryView").style.display=activeTab==="inventory"?"":"none";$("activityView").style.display=activeTab==="activity"?"":"none"});
 function renderHistory(){$("history").innerHTML=activity.slice(0,150).map(a=>`<div class="historyitem"><div><b>${esc(a.action||"Updated")}</b> · ${esc(a.partNo||"") }<br><small>${esc(a.by||"Unknown")} · ${esc(a.at||"")}</small></div><small>${esc(a.details||"")}</small></div>`).join("")||`<div class="empty">No activity recorded yet.</div>`}
