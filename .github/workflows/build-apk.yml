@@ -60,7 +60,17 @@ jobs:
         run: |
           npx cap add android
           if [ -f android-assets.zip ]; then rm -rf android-assets; unzip -q android-assets.zip; fi
-          if [ -d android-assets/res ]; then cp -r android-assets/res/. android/app/src/main/res/; else echo "No android-assets found, using default icons"; fi
+          if [ -d android-assets/res ]; then
+            RES=android/app/src/main/res
+            # remove Capacitor's default icon files so they can never override the Spare Parts logo
+            rm -rf "$RES"/mipmap-anydpi-v26 "$RES"/drawable-v24/ic_launcher_foreground.xml "$RES"/drawable/ic_launcher_background.xml "$RES"/values/ic_launcher_background.xml
+            rm -f "$RES"/mipmap-*/ic_launcher*.png
+            cp -r android-assets/res/. "$RES"/
+            echo "=== Logo icon files now in the Android project ==="
+            find "$RES" -name "ic_launcher*" | sort
+          else
+            echo "ERROR: android-assets/res not found - the logo would be the default icon"; exit 1
+          fi
           npx cap sync android
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
