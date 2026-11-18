@@ -32,8 +32,8 @@
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select>
    <button class="ghost" id="sortBtn">Sort A–Z</button><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="backupBtn">Backup JSON</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
-  <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
-  <div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div>
+  <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
+  <div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div>
   <div id="checkerSummary" class="checker-summary"></div>
   <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
   <div id="inventoryView">
@@ -84,9 +84,10 @@ function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");set
 let importReader=null,importReading=false,cancelImportRequested=false;
 let syncPaused=localStorage.getItem("parts_sync_paused")==="1";
 let syncStartedCount=0,syncCompletedCount=0;
+let syncEpoch=0;
 function saveLocal(){localRecords=records;localStorage.setItem("parts_records",JSON.stringify(records));localStorage.setItem("parts_queue",JSON.stringify(queue));localStorage.setItem("parts_conflicts",JSON.stringify(conflictDrafts));$("pendingSync").textContent=queue.length;const b=$("conflictBtn");if(b){b.style.display=conflictDrafts.length?"inline-block":"none";b.textContent=`Review conflicts (${conflictDrafts.length})`}updateSyncStatus()}
 function persistImportState(){if(window.__importState)localStorage.setItem("parts_import_state",JSON.stringify(window.__importState));else localStorage.removeItem("parts_import_state")}
-function updateImportControls(){const active=!!importReading||!!window.__importState;$("cancelImportBtn").style.display=active?"inline-block":"none";$("cancelImportBtn").disabled=cancelImportRequested;$("hideImportBtn").disabled=active;$("hideImportBtn").style.opacity=active?".45":"1";$("importBtn").disabled=active;$("importBtn").textContent=active?"Importing…":"Import";}
+function updateImportControls(){const active=!!importReading||!!window.__importState;$("cancelImportBtn").style.display=active?"inline-block":"none";$("cancelImportBtn").disabled=cancelImportRequested;$("cancelAllSyncBtn2").style.display=active?"inline-block":"none";$("hideImportBtn").disabled=active;$("hideImportBtn").style.opacity=active?".45":"1";$("importBtn").disabled=active;$("importBtn").textContent=active?"Importing…":"Import";}
 function setImportStatus(kind,title,detail,percent,retry=false){const box=$("importStatus");box.style.display="block";box.className="import-status "+(kind||"");$("importTitle").textContent=title;$("importDetail").textContent=detail;$("importProgressBar").style.width=Math.max(0,Math.min(100,Number(percent)||0))+"%";$("retryImportBtn").style.display=retry?"inline-block":"none";updateImportControls()}
 function updateSyncStatus(note=""){
  const box=$("syncStatus");
@@ -197,16 +198,40 @@ function cancelImport(){
  }
  finishImportCancellation(false);
 }
+async function cancelAllSync(){
+ const pending=queue.length;
+ if(!pending&&!window.__importState&&!importReading&&!isSyncing){toast("Nothing is syncing");return}
+ if(!confirm(`Cancel all sync?\n\n- ${pending.toLocaleString()} unsent change(s)/import batch(es) will be discarded from this device.\n- A request already sent to Google may still finish.\n- Anything Google Sheets already confirmed stays saved.\n\nThe app will then reload the latest data from Google Sheets so you can start fresh.`))return;
+ // Bump the epoch so an in-flight request cannot touch the (now empty) queue when it returns.
+ syncEpoch++;
+ if(importReader&&importReading){try{importReader.abort()}catch(_){}}
+ cancelImportRequested=false;
+ queue=[];conflictDrafts=conflictDrafts.filter(x=>x.action!=="import");
+ window.__importState=null;persistImportState();
+ importReading=false;importReader=null;
+ syncPaused=false;persistSyncPaused();
+ saveLocal();
+ $("importStatus").style.display="none";
+ updateImportControls();updateSyncStatus();
+ toast("All sync cancelled. Reloading latest data from Google Sheets…");
+ // Drop local edits that were never confirmed: refetch the full inventory once.
+ isSyncing=false;
+ syncCursors=null;localStorage.removeItem("parts_cursors");
+ localRecords=[];
+ await load();
+}
+$("cancelAllSyncBtn").onclick=cancelAllSync;$("cancelAllSyncBtn2").onclick=cancelAllSync;
 async function syncQueue(){
  if(!navigator.onLine||!queue.length||isSyncing||syncPaused)return;
- isSyncing=true;let failed=false,conflictCount=0,wasCancelled=false,receivedCursors=false;
+ isSyncing=true;const myEpoch=syncEpoch;let failed=false,conflictCount=0,wasCancelled=false,receivedCursors=false;
  syncStartedCount=queue.length;syncCompletedCount=0;updateSyncStatus();
  try{
-  while(navigator.onLine&&queue.length&&!syncPaused&&!cancelImportRequested){
+  while(navigator.onLine&&queue.length&&!syncPaused&&!cancelImportRequested&&myEpoch===syncEpoch){
    let item=queue[0];
    try{
     updateSyncStatus(item.action==="import"?`Uploading import batch ${item.payload?.batchNumber||""} of ${item.payload?.totalBatches||""}…`:`Sending ${syncCompletedCount+1} of ${syncStartedCount} saved changes…`);
     let response=item.action==="import"?await postApi("import",item.payload):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
+    if(myEpoch!==syncEpoch)break;
     if(response.cursors){syncCursors=response.cursors;saveCursors();receivedCursors=true}
     if(item.action==="import"&&Array.isArray(response.records)){
      response.records.forEach(record=>applyDeltaRecord({id:record.id,operation:"upsert",record}));
@@ -227,6 +252,7 @@ async function syncQueue(){
     }
     queue.shift();syncCompletedCount++;saveLocal();
    }catch(e){
+    if(myEpoch!==syncEpoch)break;
     if(String(e.message||e).includes("CONFLICT:")){
      conflictDrafts.unshift({id:String(Date.now())+"_"+String(Math.floor(Math.random()*1e6)),action:item.action,payload:item.payload,reason:String(e.message||e),createdAt:new Date().toISOString()});
      queue.shift();saveLocal();conflictCount++;
@@ -239,7 +265,8 @@ async function syncQueue(){
     }
    }
   }
- }finally{isSyncing=false}
+ }finally{if(myEpoch===syncEpoch)isSyncing=false}
+ if(myEpoch!==syncEpoch)return;
  if(cancelImportRequested){wasCancelled=true;await finishImportCancellation(failed)}
  // Successful writes return the revisions they just committed, so the client
  // can avoid immediately polling the same rows back from Sheets. Failed or
@@ -414,8 +441,21 @@ async function importFile(file){
   }
  }finally{importReading=false;importReader=null;updateImportControls()}
 }
-$('importBtn').onclick=()=>{if(importReading||window.__importState){toast("An import is already in progress");return}if(queue.length||isSyncing){toast("Synchronize pending changes before starting an import");return}$('fileInput').click()};
-$('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;await importFile(f);e.target.value=''};
+let importPrepReload=null;
+$('importBtn').onclick=()=>{
+ if(importReading||window.__importState){toast("An import is already in progress");return}
+ if(queue.length||isSyncing){
+  const n=queue.length;
+  if(!confirm(`There ${n===1?"is":"are"} ${n.toLocaleString()} unsent local change(s) waiting to sync.\n\nPress OK to discard them and continue with the import, or Cancel to keep them.\n\n(The latest data will be reloaded from Google Sheets first.)`))return;
+  syncEpoch++;queue=[];isSyncing=false;syncPaused=false;persistSyncPaused();
+  window.__importState=null;persistImportState();
+  saveLocal();updateSyncStatus();
+  syncCursors=null;localStorage.removeItem("parts_cursors");localRecords=[];
+  importPrepReload=load().catch(()=>{});
+ }
+ $('fileInput').click()
+};
+$('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(importPrepReload){setImportStatus("","Reloading latest data…","Refreshing from Google Sheets before the import starts.",0,false);await importPrepReload;importPrepReload=null}await importFile(f);e.target.value=''};
 $('csvBtn').onclick=exportCSV;$('backupBtn').onclick=exportBackup;
 $("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(navigator.onLine?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(navigator.onLine)syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
