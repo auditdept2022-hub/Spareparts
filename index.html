@@ -72,29 +72,84 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .top select#profile:focus{outline:0;border-color:#6ea8ff;box-shadow:0 0 0 3px rgba(110,168,255,.28)}
 .top select#profile option{color:#17263e;background:#fff}
 @media(max-width:760px){.top{align-items:center}.topright{flex-direction:row;align-items:center;gap:8px}.top select#profile{height:30px;line-height:30px;font-size:12px;padding:0 26px 0 28px;background-position:left 9px center,right 9px center;background-size:13px,10px;max-width:120px}.status{font-size:10px;white-space:nowrap}}
+
+/* STICKY STATS + SEARCH: stay pinned under the header while the list scrolls */
+:root{--topH:48px}
+.stickyarea{position:sticky;top:var(--topH);z-index:4;background:var(--bg);margin:0 -12px 8px;padding:8px 12px 6px}
+.stickyarea .stats{margin-bottom:8px}
+.stickyarea .search{display:block;flex:none;width:100%;min-width:0;position:relative}
+.stickyarea .search input{width:100%;background:#fff;box-shadow:0 1px 2px rgba(20,35,59,.06)}
+.panel{overflow:visible}
+.panel>.toolbar{border-radius:12px 12px 0 0}
+.panel>.tablewrap:last-child,.panel>#inventoryView{border-radius:0 0 12px 12px}
+@media(max-width:760px){.stickyarea{margin:0 -8px 6px;padding:6px 8px 5px}.stickyarea .stats{margin-bottom:6px}}
+
+/* ONLINE / OFFLINE indicator */
+.top .status{padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.1);font-weight:700}
+.dot.online{background:#42d392;box-shadow:0 0 0 3px rgba(66,211,146,.25)}
+.dot.offline{background:#ff5d5d;box-shadow:0 0 0 3px rgba(255,93,93,.3);animation:netpulse 1.2s infinite}
+.top .status.isoffline{background:#7a1f28;color:#fff}
+@keyframes netpulse{50%{opacity:.35}}
+#confirmBody{line-height:1.5}
+.modalfoot button:disabled{opacity:.5;cursor:not-allowed}
+
+/* HEADER REDESIGN + BELL */
+.status.mini{display:none}
+.top .bellbtn{position:relative;width:36px;height:36px;padding:0;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
+.bellbtn svg{width:18px;height:18px}
+.bellbtn:active{background:rgba(255,255,255,.22)}
+.bellbadge{position:absolute;top:-5px;right:-5px;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#f5b335;color:#1a2433;font-size:10px;font-weight:800;line-height:14px;text-align:center;border:2px solid var(--navy)}
+.bellbadge[hidden]{display:none}
+.bellbtn.syncing .bellbadge{background:#5aa2ff;color:#fff}.bellbtn.syncing svg{animation:netpulse 1.2s infinite}
+.bellbtn.paused .bellbadge{background:#c9d2e0}
+.bellbtn.offline .bellbadge{background:#ff6b6b;color:#fff}
+.notifpanel{position:fixed;top:calc(var(--topH) + 6px);right:10px;width:min(380px,calc(100vw - 20px));max-height:70vh;overflow:auto;background:#fff;color:var(--text);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 44px rgba(10,20,40,.35);z-index:30}
+.notifpanel[hidden]{display:none}
+.notifhead{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.notifhead button{padding:4px 9px;font-size:12px}
+.notifempty{padding:18px 14px;color:var(--muted);text-align:center;font-size:13px}
+.notifpanel .sync-status{border:0;background:#fff;padding:12px}
+.notifpanel .sync-actions{width:100%;flex-wrap:nowrap}.notifpanel .sync-actions button{flex:1;padding:8px 6px;font-size:12px}
+@media(max-width:760px){
+ .top{padding:7px 10px;gap:8px;flex-wrap:nowrap;align-items:center}
+ .brand{flex:1;min-width:0;gap:9px}
+ .brandtext{min-width:0}
+ .top .logo{width:42px;height:42px;border-radius:12px;flex:none;padding:2px}
+ .brand h1{font-size:16px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+ .brand small{display:none}
+ .topright{flex:none;gap:8px}
+ .topright>.status{display:none}
+ .top .status.mini{display:inline-flex;font-size:11px;padding:0;background:none;margin-top:1px;gap:5px}
+ .top .status.mini.isoffline{background:none;color:#ff9b9b}
+ .top select#profile{height:36px;line-height:36px;width:104px;max-width:104px;font-size:13px;padding:0 26px 0 30px;background-position:left 10px center,right 9px center}
+ .notifpanel{left:8px;right:8px;width:auto}
+}
 </style>
 </head>
 <body>
 <header class="top">
- <div class="brand"><div class="logo"><img src="icon-192.png" alt="Spare Parts logo"></div><div><h1>Parts Inventory</h1><small>Inventory counting & tracking</small></div></div>
- <div class="topright"><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
+ <div class="brand"><div class="logo"><img src="icon-192.png" alt="Spare Parts logo"></div><div class="brandtext"><h1>Parts Inventory</h1><small>Inventory counting &amp; tracking</small><div class="status mini"><i class="dot" id="netdot2"></i><span id="netlabel2">Checking</span></div></div></div>
+ <div class="topright"><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><button type="button" class="bellbtn" id="bellBtn" aria-label="Notifications" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bellbadge" id="bellBadge" hidden>0</span></button><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
+ <div class="notifpanel" id="notifPanel" hidden><div class="notifhead"><b>Notifications</b><button type="button" class="ghost" id="notifClose" aria-label="Close">✕</button></div><div class="notifempty" id="notifEmpty">All changes are synced.</div><div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div></div>
 </header>
 <main class="wrap">
+ <div class="stickyarea" id="stickyArea">
  <section class="stats">
   <div class="stat"><div class="k">Total parts</div><strong id="totalParts">—</strong><small>Inventory records</small></div>
   <div class="stat"><div class="k">Counted today</div><strong id="countedToday">—</strong><small id="todayLabel">Selected date</small></div>
   <div class="stat"><div class="k">Discrepancies</div><strong id="discrepancies">—</strong><small>Count differs from End Inv.</small></div>
   <div class="stat"><div class="k">Pending sync</div><strong id="pendingSync">0</strong><small>Changes saved on this device</small></div>
  </section>
+ <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
+ </div>
  <section class="panel">
   <div class="toolbar" id="toolbar">
-   <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div><button type="button" class="toolbartoggle" id="toolbarToggle" aria-expanded="false"><span>⚙ Filters &amp; actions <i id="toolbarDot" hidden>●</i></span><b id="toolbarArrow">▾</b></button>
+   <button type="button" class="toolbartoggle" id="toolbarToggle" aria-expanded="false"><span>⚙ Filters &amp; actions <i id="toolbarDot" hidden>●</i></span><b id="toolbarArrow">▾</b></button>
    <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select><button class="ghost" id="addDateBtn" title="Add a new count date">＋ Date</button><input type="date" id="newDateInput" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
    <div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
-  <div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div>
   <div id="checkerSummary" class="checker-summary"></div>
   <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
   <div id="inventoryView">
@@ -167,7 +222,8 @@ function saveLocal(){localRecords=records;localStorage.setItem("parts_records",J
 function persistImportState(){if(window.__importState)localStorage.setItem("parts_import_state",JSON.stringify(window.__importState));else localStorage.removeItem("parts_import_state")}
 function updateImportControls(){const active=!!importReading||!!window.__importState;$("cancelImportBtn").style.display=active?"inline-block":"none";$("cancelImportBtn").disabled=cancelImportRequested;$("cancelAllSyncBtn2").style.display=active?"inline-block":"none";$("hideImportBtn").disabled=active;$("hideImportBtn").style.opacity=active?".45":"1";$("importBtn").disabled=active;$("importBtn").textContent=active?"Importing…":"Import";}
 function setImportStatus(kind,title,detail,percent,retry=false){const box=$("importStatus");box.style.display="block";box.className="import-status "+(kind||"");$("importTitle").textContent=title;$("importDetail").textContent=detail;$("importProgressBar").style.width=Math.max(0,Math.min(100,Number(percent)||0))+"%";$("retryImportBtn").style.display=retry?"inline-block":"none";updateImportControls()}
-function updateSyncStatus(note=""){
+function updateSyncStatus(note=""){updateSyncStatusCore(note);updateBell()}
+function updateSyncStatusCore(note=""){
  const box=$("syncStatus");
  if(!box)return;
  const hasImport=!!window.__importState||importReading;
@@ -177,20 +233,44 @@ function updateSyncStatus(note=""){
  box.style.display="block";
  const state=syncPaused?"Sync paused":(isSyncing?"Syncing changes":"Waiting to sync");
  $("syncTitle").textContent=`${state} · ${pending.toLocaleString()} pending`;
- $("syncDetail").textContent=note||(syncPaused?"Your edits remain safely queued on this device. Resume sync when ready.":(navigator.onLine?"Sending saved changes to Google Sheets one at a time.":"Offline. Changes are saved on this device and will sync when connection returns."));
+ $("syncDetail").textContent=note||(syncPaused?"Your edits remain safely queued on this device. Resume sync when ready.":(netOnline()?"Auto-sync is on. Saved changes are sent to Google Sheets one at a time.":"Offline. Changes are saved on this device and will sync automatically when the connection returns."));
  $("syncControlBtn").textContent=syncPaused?"Resume sync":"Pause sync";
- $("syncNowBtn").disabled=!navigator.onLine||isSyncing;
+ $("syncNowBtn").disabled=!netOnline()||isSyncing;
 }
 function persistSyncPaused(){localStorage.setItem("parts_sync_paused",syncPaused?"1":"0")}
 window.__importState=JSON.parse(localStorage.getItem("parts_import_state")||"null");
 if(window.__importState){const st=window.__importState;setImportStatus("warning","Import is waiting to resume",`${st.imported||0} of ${st.expected||0} rows were confirmed before this page was closed. Pending batches: ${queue.filter(x=>x.action==="import").length}.`,Math.round(20+((st.imported||0)/(st.expected||1))*80),queue.some(x=>x.action==="import"))}
 $("hideImportBtn").onclick=()=>{if(importReading||window.__importState)return;$("importStatus").style.display="none"};
 $("retryImportBtn").onclick=()=>{cancelImportRequested=false;syncPaused=false;persistSyncPaused();if(queue.length)syncQueue();else refreshFromSheets()};
-$("cancelImportBtn").onclick=cancelImport;
+$("cancelImportBtn").onclick=async()=>{if(await askConfirm({title:"Cancel the import?",body:"Are you sure you want to stop the import?\n\nRows already confirmed by Google Sheets stay saved. Rows not yet sent will be dropped.",yes:"Yes, cancel import",no:"No, keep importing"}))cancelImport()};
 $("syncControlBtn").onclick=()=>{syncPaused=!syncPaused;persistSyncPaused();updateSyncStatus();if(!syncPaused)syncQueue()};
-$("syncNowBtn").onclick=()=>{syncPaused=false;persistSyncPaused();updateSyncStatus();syncQueue()};
-function setNet(){let on=navigator.onLine;$("netdot").classList.toggle("online",on);$("netlabel").textContent=on?"Online":"Offline"}
-window.addEventListener("online",()=>{setNet();if(queue.length)syncQueue();else refreshFromSheets()});window.addEventListener("offline",setNet);
+$("syncNowBtn").onclick=()=>{autoFails=0;autoNextAt=0;syncPaused=false;persistSyncPaused();updateSyncStatus();syncQueue()};
+/* REAL CONNECTION CHECK: the phone's wifi flag is not trusted on its own, the app also tries to reach the internet every few seconds */
+let netReachable=true,netLast=null,netProbing=false;
+function netOnline(){return navigator.onLine&&netReachable}
+function setNet(){
+ const on=netOnline();
+ $("netdot").classList.toggle("online",on);$("netdot").classList.toggle("offline",!on);
+ $("netlabel").textContent=on?"Online":"Offline";
+ $("netdot2").classList.toggle("online",on);$("netdot2").classList.toggle("offline",!on);$("netlabel2").textContent=on?"Online":"Offline";
+ document.querySelectorAll(".top .status").forEach(st=>st.classList.toggle("isoffline",!on));
+ const changed=netLast!==null&&netLast!==on;netLast=on;
+ try{updateSyncStatus()}catch(e){}
+ if(changed){toast(on?"Back online":"You are offline. Changes are saved on this device and will sync when the connection returns.");if(on){autoFails=0;autoNextAt=0;if(queue.length)syncQueue();else refreshFromSheets()}}
+}
+function netPing(url){return new Promise((res,rej)=>{const c=new AbortController(),t=setTimeout(()=>{c.abort();rej(0)},4000);fetch(url+"?t="+Date.now(),{mode:"no-cors",cache:"no-store",signal:c.signal}).then(()=>{clearTimeout(t);res(true)},()=>{clearTimeout(t);rej(0)})})}
+function netPingAny(){const a=[netPing("https://www.gstatic.com/generate_204"),netPing("https://www.google.com/generate_204")];return(Promise.any?Promise.any(a):new Promise((ok,no)=>{let f=0;a.forEach(p=>p.then(ok,()=>{if(++f===a.length)no()}))})).then(()=>true,()=>false)}
+async function probeNet(){
+ if(netProbing)return;netProbing=true;
+ let ok=false;if(navigator.onLine)ok=await netPingAny();
+ netReachable=ok;netProbing=false;setNet();
+}
+window.addEventListener("online",probeNet);
+window.addEventListener("offline",()=>{netReachable=false;setNet()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)probeNet()});
+window.addEventListener("focus",probeNet);
+setInterval(()=>{if(!document.hidden)probeNet()},5000);
+setNet();probeNet();
 function jsonp(params,timeoutMs=25000){window.__reqStart=Date.now();window.__reqAction=params.action;return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},timeoutMs);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
 async function postApi(action,payload){return jsonp({action,payload:JSON.stringify(payload)},action==="import"?75000:25000)}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -204,7 +284,7 @@ async function importWithRetry(payload,epoch){
  const stopped=()=>epoch!==syncEpoch||cancelImportRequested;
  while(true){
   if(stopped())throw lastErr||Error("IMPORT_CANCELLED");
-  if(!navigator.onLine){
+  if(!netOnline()){
    setImportStatus("warning","Offline — waiting for connection","The import will continue automatically as soon as you are back online.",Math.round(20+((Number(window.__importState?.imported||0))/Math.max(1,Number(window.__importState?.expected||1)))*80),false);
    await sleep(2000);continue;
   }
@@ -242,7 +322,7 @@ function applyDeltaRecord(change){
 }
 async function load(){
  setNet();
- if(!navigator.onLine){records=localRecords;render();return}
+ if(!netOnline()){records=localRecords;render();return}
  // Full inventory is fetched only on first installation/no cache cursor. Later sessions use deltas.
  const hasLocalInventory=Array.isArray(localRecords)&&localRecords.length>0;
  const hasCursor=!!syncCursors&&hasLocalInventory;
@@ -257,7 +337,7 @@ async function load(){
 }
 let isSyncing=false;
 async function refreshFromSheets(){
- if(!navigator.onLine||queue.length||isSyncing||document.hidden||$("editModal").classList.contains("show"))return;
+ if(!netOnline()||queue.length||isSyncing||document.hidden||$("editModal").classList.contains("show"))return;
  if(!syncCursors){await load();return}
  let anyChanged=false,more=true,rounds=0;
  try{
@@ -308,7 +388,20 @@ setInterval(()=>{
  if(secs>=5&&window.__reqAction==="import"){const st=window.__importState;$("importDetail").textContent=`Waiting for Google to confirm batch ${st.confirmedBatches+1} of ${st.totalBatches}… ${secs}s (limit 75s, then it retries automatically). If this never moves, press Test connection.`}
 },1000);
 window.setInterval(refreshFromSheets,15000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshFromSheets()});
+/* AUTO SYNC: whenever the app is online and changes are waiting, send them by itself (no button needed).
+   Pause sync still stops it. After a failure it retries with a growing pause (8s, 16s, 32s, max 60s). */
+let autoFails=0,autoNextAt=0,autoBusy=false;
+async function autoSyncTick(force){
+ if(autoBusy||!queue.length||isSyncing||syncPaused||cancelImportRequested||!netOnline())return;
+ if(!force&&Date.now()<autoNextAt)return;
+ autoBusy=true;const before=queue.length;
+ try{await syncQueue()}catch(e){}
+ autoBusy=false;
+ if(queue.length&&!syncPaused&&queue.length>=before){autoFails++;autoNextAt=Date.now()+Math.min(60000,8000*Math.pow(2,autoFails-1))}
+ else{autoFails=0;autoNextAt=0}
+}
+setInterval(()=>{if(!document.hidden)autoSyncTick()},4000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){if(queue.length)autoSyncTick(true);else refreshFromSheets()}});
 async function finishImportCancellation(uncertainBatch=false){
  const st=window.__importState;
  const removed=queue.filter(x=>x.action==="import").length;
@@ -342,10 +435,49 @@ function cancelImport(){
  }
  finishImportCancellation(false);
 }
+
+
+/* BELL: the sync status lives in a notification panel in the header */
+function updateBell(){
+ const bg=$("bellBadge"),btn=$("bellBtn");if(!bg||!btn)return;
+ const n=queue.length,box=$("syncStatus"),showing=box.style.display!=="none";
+ bg.hidden=!n;bg.textContent=n>99?"99+":String(n);
+ btn.classList.toggle("syncing",n>0&&!!isSyncing&&!syncPaused);btn.classList.toggle("paused",n>0&&!!syncPaused);btn.classList.toggle("offline",n>0&&!netOnline());
+ btn.setAttribute("aria-label",n?`${n} change(s) waiting to sync`:"Notifications");
+ const e=$("notifEmpty");e.style.display=showing?"none":"block";
+ e.textContent=n?"An import is in progress. See the Import panel for details.":(netOnline()?"All changes are synced. No notifications.":"You are offline. New changes are saved on this device and sync when the connection returns.");
+}
+(function(){
+ const b=$("bellBtn"),p=$("notifPanel");
+ function setOpen(o){p.hidden=!o;b.setAttribute("aria-expanded",String(o))}
+ b.onclick=e=>{e.stopPropagation();setOpen(p.hidden)};
+ $("notifClose").onclick=()=>setOpen(false);
+ document.addEventListener("click",e=>{if(p.hidden)return;if(p.contains(e.target)||b.contains(e.target)||$("confirmBack").contains(e.target))return;setOpen(false)});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!p.hidden&&!$("confirmBack").classList.contains("show"))setOpen(false)});
+})();
+/* ARE-YOU-SURE DIALOG (not dismissed by tapping outside; the Yes button unlocks after a short delay so a double tap cannot confirm by accident) */
+function askConfirm({title,body,yes,no,delay=800}){
+ return new Promise(resolve=>{
+  const back=$("confirmBack"),y=$("confirmYes"),n=$("confirmNo");
+  $("confirmTitle").textContent=title;$("confirmBody").textContent=body;y.textContent=yes;n.textContent=no;
+  y.disabled=true;setTimeout(()=>{y.disabled=false},delay);
+  function done(v){back.classList.remove("show");y.onclick=n.onclick=null;document.removeEventListener("keydown",key,true);resolve(v)}
+  function key(e){if(e.key==="Escape"){e.preventDefault();done(false)}}
+  y.onclick=()=>{if(!y.disabled)done(true)};n.onclick=()=>done(false);
+  document.addEventListener("keydown",key,true);
+  back.classList.add("show");setTimeout(()=>n.focus(),0);
+ });
+}
 async function cancelAllSync(){
  const pending=queue.length;
  if(!pending&&!window.__importState&&!importReading&&!isSyncing){toast("Nothing is syncing");return}
- if(!confirm(`Cancel all sync?\n\n- ${pending.toLocaleString()} unsent change(s)/import batch(es) will be discarded from this device.\n- A request already sent to Google may still finish.\n- Anything Google Sheets already confirmed stays saved.\n\nThe app will then reload the latest data from Google Sheets so you can start fresh.`))return;
+ if(!await askConfirm({title:"Cancel all sync?",body:`Are you sure? This protects your data from an accidental tap.
+
+- ${pending.toLocaleString()} unsent change(s)/import batch(es) will be DISCARDED from this device.
+- A request already sent to Google may still finish.
+- Anything Google Sheets already confirmed stays saved.
+
+The app will then reload the latest data from Google Sheets.`,yes:"Yes, cancel sync",no:"No, keep syncing"}))return;
  // Bump the epoch so an in-flight request cannot touch the (now empty) queue when it returns.
  syncEpoch++;
  if(importReader&&importReading){try{importReader.abort()}catch(_){}}
@@ -365,11 +497,11 @@ async function cancelAllSync(){
 }
 $("cancelAllSyncBtn").onclick=cancelAllSync;$("cancelAllSyncBtn2").onclick=cancelAllSync;
 async function syncQueue(){
- if(!navigator.onLine||!queue.length||isSyncing||syncPaused)return;
+ if(!netOnline()||!queue.length||isSyncing||syncPaused)return;
  isSyncing=true;const myEpoch=syncEpoch;let failed=false,conflictCount=0,wasCancelled=false,receivedCursors=false;
  syncStartedCount=queue.length;syncCompletedCount=0;updateSyncStatus();
  try{
-  while(navigator.onLine&&queue.length&&!syncPaused&&!cancelImportRequested&&myEpoch===syncEpoch){
+  while(netOnline()&&queue.length&&!syncPaused&&!cancelImportRequested&&myEpoch===syncEpoch){
    let item=queue[0];
    try{
     updateSyncStatus(item.action==="import"?`Uploading import batch ${item.payload?.batchNumber||""} of ${item.payload?.totalBatches||""}…`:`Sending ${syncCompletedCount+1} of ${syncStartedCount} saved changes…`);
@@ -442,7 +574,7 @@ async function syncQueue(){
  }
  if(failed&&!wasCancelled){
   if(window.__importState){const st=window.__importState;const detail=`${st.imported} of ${st.expected} rows confirmed. Failed batch: ${window.__importFailedBatch||"unknown"} of ${st.totalBatches}. ${window.__importLastError||"The server did not confirm this batch."} ${explainServerError(window.__importLastError)} The failed and later batches remain queued for retry.`;setImportStatus("warning","Import paused — no false success shown",detail,Math.round(20+(st.imported/st.expected)*80),true)}
-  else updateSyncStatus("A request failed. Your unsent changes remain queued; use Sync now to retry.");
+  else updateSyncStatus("A request failed. Your changes are safe on this device. Auto-sync will retry shortly, or tap Sync now.");
   toast("Some changes are still waiting to sync. Your local cache and pending changes are retained.");
  }
  if(syncPaused&&queue.length)updateSyncStatus("Sync paused after the current request. Remaining changes are safely queued.");
@@ -477,9 +609,9 @@ $("rows").addEventListener("click",openFromRow);$("cards").addEventListener("cli
 [$("rows"),$("cards")].forEach(el=>el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("clickrow")){e.preventDefault();openFromRow(e)}}));
 window.editPart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(r)openModal(r)}
 window.quickCount=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;openModal(r);$("fCount").focus()};
-async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts to review");return}if(!navigator.onLine){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts[0];if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
+async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts to review");return}if(!netOnline()){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts[0];if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
 $('conflictBtn').onclick=reviewConflicts;
-window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(navigator.onLine?"Delete submitted…":"Delete queued until online");if(navigator.onLine)syncQueue()}
+window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(netOnline()?"Delete submitted…":"Delete queued until online");if(netOnline())syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
 async function nativeSaveShare(name,content,type){
  try{
@@ -576,7 +708,7 @@ async function importFile(file){
   const normalized=items.map(importedRecord).filter(r=>r['Part no.']&&r['Part no.'].toLowerCase()!=='total');
   const totalRows=items.filter(r=>String(r['Part no.']??r['Part no']??'').trim().toLowerCase()==='total').length;
   if(!normalized.length)throw Error('No valid part numbers found in the selected file');
-  if(!navigator.onLine)throw Error('Connect to the internet before importing. No import was queued or saved only on this device.');
+  if(!netOnline())throw Error('Connect to the internet before importing. No import was queued or saved only on this device.');
   if(queue.length)throw Error('There are pending changes. Synchronize them before importing this workbook.');
   const partNumbers=normalized.map(r=>String(r['Part no.']).trim().toUpperCase());
   const duplicateCount=partNumbers.length-new Set(partNumbers).size;
@@ -623,13 +755,13 @@ $('importBtn').onclick=()=>{
 $('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(importPrepReload){setImportStatus("","Reloading latest data…","Refreshing from Google Sheets before the import starts.",0,false);await importPrepReload;importPrepReload=null}await importFile(f);e.target.value=''};
 $('csvBtn').onclick=exportCSV;
 $("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":($("fCount").value!==""?$("fCount").value:prevCount);if(String(prevCount??"")!==String(newCount??"")){obj[byKey]=newCount===""?"":activeProfile;if(newCount!=="")obj.Profile=activeProfile}
-if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(navigator.onLine?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(navigator.onLine)syncQueue()};
+if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
 async function addCountDate(ds){
  const exists=countDates.includes(ds);
  if(!exists){
-  if(!navigator.onLine){toast("Connect to the internet to add a new count date");return}
+  if(!netOnline()){toast("Connect to the internet to add a new count date");return}
   if(!confirm(`Add ${dateLabel(ds)} as a new count date?\n\nA new Count column is added to the Google Sheet and appears on every device.`))return;
   try{toast("Adding date…");const res=await postApi("adddate",{date:ds,by:activeProfile});setCountDates(res.dates||[...countDates,ds])}
   catch(err){alert(String(err.message||err).includes("Unknown action")?"Google is running an OLD Code.gs. Paste the new Code.gs, Save, then Deploy > Manage deployments > Edit > New version > Deploy.":"Could not add the date: "+(err.message||err));return}
@@ -666,5 +798,9 @@ saveLocal();
 render();
 load();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+<div class="modalback" id="confirmBack" style="z-index:60"><div class="modal confirmbox" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(420px,100%)"><div class="modalhead"><h2 id="confirmTitle"></h2></div><div class="modalbody" id="confirmBody" style="white-space:pre-line"></div><div class="modalfoot"><button class="secondary" id="confirmNo" type="button"></button><button class="danger" id="confirmYes" type="button"></button></div></div></div>
+<script>
+(function(){var h=document.querySelector("header.top");if(!h)return;function set(){document.documentElement.style.setProperty("--topH",h.offsetHeight+"px")}set();window.addEventListener("resize",set);window.addEventListener("orientationchange",set);window.addEventListener("load",set);if(window.ResizeObserver)new ResizeObserver(set).observe(h)})();
 </script>
 </body></html>
