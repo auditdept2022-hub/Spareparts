@@ -9,7 +9,7 @@
 <style>
 :root{--navy:#14233b;--blue:#2563eb;--bg:#f3f6fb;--card:#fff;--text:#172033;--muted:#68758a;--line:#e4e9f1;--green:#168653;--red:#c43d4b;--amber:#a96808;--shadow:0 8px 26px rgba(20,35,59,.07)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:650}.primary{background:var(--blue);color:white}.secondary{background:#eaf0fb;color:#1c3764}.danger{background:#fff0f1;color:var(--red)}.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.top{background:var(--navy);color:white;padding:16px max(18px,calc((100vw - 1440px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5}.brand{display:flex;align-items:center;gap:10px}.logo{width:38px;height:38px;border-radius:12px;background:#29466f;display:grid;place-items:center;font-size:20px}.brand h1{font-size:17px;margin:0}.brand small{display:block;color:#b9c8dd;font-size:11px}.topright{display:flex;align-items:center;gap:9px}.top select{background:#263b5a;color:white;border:1px solid #49617f;border-radius:9px;padding:9px;max-width:150px}.status{font-size:12px;color:#d6e3f4;display:flex;align-items:center;gap:6px}.dot{width:8px;height:8px;border-radius:50%;background:#efb23f;display:inline-block}.dot.online{background:#42d392}.wrap{max-width:1440px;margin:auto;padding:22px 20px 60px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow)}.stat .k{color:var(--muted);font-size:12px}.stat strong{display:block;font-size:25px;margin-top:5px;letter-spacing:-.5px}.stat small{color:var(--muted)}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.toolbar{padding:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.search{flex:1;min-width:210px;position:relative}.search input{width:100%;padding:11px 13px 11px 37px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe}.search span{position:absolute;left:13px;top:9px;color:var(--muted);font-size:17px}.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:9px;padding:10px;background:white;color:var(--text);width:100%}.toolbar select{width:auto;min-width:130px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#fafbfd;position:sticky;top:0;z-index:1}td{font-size:13px}tbody tr:hover{background:#f8faff}.part{font-weight:700;color:#193d73}.desc{max-width:260px;overflow:hidden;text-overflow:ellipsis}.pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 8px;font-size:11px;background:#eef2f8;color:#506078}.pill.done{background:#e8f7ef;color:#16774a}.pill.pending{background:#fff5df;color:#98630b}.actions{display:flex;gap:6px}.actions button{padding:7px 9px;font-size:12px}.empty{text-align:center;padding:44px;color:var(--muted)}.foot{padding:12px 15px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;gap:10px}.pagination{display:flex;gap:7px}.pagination button{padding:7px 11px}.modalback{position:fixed;inset:0;background:#0b1729a8;z-index:20;display:none;align-items:center;justify-content:center;padding:15px}.modalback.show{display:flex}.modal{width:min(720px,100%);max-height:92vh;overflow:auto;background:white;border-radius:18px;box-shadow:0 20px 80px #0004}.modalhead{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalhead h2{margin:0;font-size:18px}.modalbody{padding:20px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field label{display:block;font-size:12px;font-weight:700;color:#536177;margin-bottom:6px}.field.full{grid-column:1/-1}.field textarea{min-height:75px;resize:vertical}.modalfoot{padding:15px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}.notice{padding:10px 13px;border-radius:10px;background:#eff5ff;color:#36527b;font-size:12px;margin-bottom:14px}.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:#17263e;color:white;padding:11px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:50;box-shadow:var(--shadow);max-width:90vw}.toast.show{opacity:1;transform:translate(-50%,0)}.mobilecards{display:none}.tabs{display:flex;gap:7px}.tabs button{background:transparent;color:var(--muted);padding:9px 12px}.tabs button.active{background:#eaf0fb;color:#214c91}.history{padding:16px}.historyitem{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}.historyitem small{color:var(--muted)}
-.fileactions{display:flex;gap:7px;flex-wrap:wrap}.fileactions button{padding:9px 11px;font-size:12px}.checker-summary{padding:8px 15px;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}.checker-summary b{color:var(--text)}.variance{color:var(--red);font-weight:750}.compactrow{padding:9px 12px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;background:#fff}.compactmain{min-width:0}.compactid{display:flex;align-items:center;gap:7px}.compactid strong{color:#193d73;font-size:12px}.compactdesc{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 4px}.compactinfo{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}.compactinfo b{color:var(--text);font-weight:650}.compactactions{display:flex;align-items:center;gap:5px}.compactactions button{padding:7px 9px;font-size:11px}.compactdetails{grid-column:1/-1}.compactdetails summary{font-size:11px;color:#52627a;cursor:pointer}.compactdetailgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px 0 2px;font-size:11px;color:var(--muted)}.compactdetailgrid b{color:var(--text);display:block}.pill.bad{background:#fff0f1;color:#b52e3c}.pill.done{background:#e8f7ef;color:#16774a}
+.import-status{padding:12px 15px;border-bottom:1px solid var(--line);background:#f7faff}.import-status-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;font-weight:700}.import-status-detail{font-size:11px;color:var(--muted);margin-top:6px}.import-progress-track{height:7px;border-radius:99px;background:#e2e9f4;overflow:hidden;margin-top:9px}.import-progress-fill{height:100%;width:0;background:var(--blue);transition:width .2s}.import-status.success .import-progress-fill{background:var(--green)}.import-status.warning .import-progress-fill{background:var(--amber)}.fileactions{display:flex;gap:7px;flex-wrap:wrap}.fileactions button{padding:9px 11px;font-size:12px}.checker-summary{padding:8px 15px;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}.checker-summary b{color:var(--text)}.variance{color:var(--red);font-weight:750}.compactrow{padding:9px 12px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;background:#fff}.compactmain{min-width:0}.compactid{display:flex;align-items:center;gap:7px}.compactid strong{color:#193d73;font-size:12px}.compactdesc{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 4px}.compactinfo{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}.compactinfo b{color:var(--text);font-weight:650}.compactactions{display:flex;align-items:center;gap:5px}.compactactions button{padding:7px 9px;font-size:11px}.compactdetails{grid-column:1/-1}.compactdetails summary{font-size:11px;color:#52627a;cursor:pointer}.compactdetailgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px 0 2px;font-size:11px;color:var(--muted)}.compactdetailgrid b{color:var(--text);display:block}.pill.bad{background:#fff0f1;color:#b52e3c}.pill.done{background:#e8f7ef;color:#16774a}
 @media(max-width:760px){.top{padding:12px 14px;align-items:flex-start}.brand h1{font-size:15px}.topright{flex-direction:column;align-items:flex-end;gap:5px}.status{font-size:10px}.wrap{padding:14px 12px 45px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:12px}.stat strong{font-size:21px}.toolbar{padding:11px}.toolbar .search{flex-basis:100%}.toolbar select{flex:1;min-width:0}.toolbar>button{flex:1}.tablewrap{display:none}.mobilecards{display:grid;gap:0;padding:0}.compactrow{grid-template-columns:minmax(0,1fr) auto;padding:9px 10px;gap:7px}.compactactions{flex-direction:column;align-items:stretch}.compactactions button{min-width:58px;padding:7px 8px}.compactinfo{gap:7px}.fileactions{width:100%}.fileactions button{flex:1}.foot{flex-wrap:wrap}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.modalback{padding:8px}.modal{max-height:96vh}.modalbody{padding:15px}.modalhead{padding:15px}.modalfoot{padding:12px 15px}.tabs{overflow:auto}.tabs button{white-space:nowrap}} 
 </style>
 </head>
@@ -32,6 +32,7 @@
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select>
    <button class="ghost" id="sortBtn">Sort A–Z</button><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="backupBtn">Backup JSON</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
+  <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
   <div id="checkerSummary" class="checker-summary"></div>
   <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
   <div id="inventoryView">
@@ -80,6 +81,12 @@ let activeProfile=localStorage.getItem("parts_profile")||"Edison";
 $("profile").value=activeProfile;
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
 function saveLocal(){localRecords=records;localStorage.setItem("parts_records",JSON.stringify(records));localStorage.setItem("parts_queue",JSON.stringify(queue));localStorage.setItem("parts_conflicts",JSON.stringify(conflictDrafts));$("pendingSync").textContent=queue.length;const b=$("conflictBtn");if(b){b.style.display=conflictDrafts.length?"inline-block":"none";b.textContent=`Review conflicts (${conflictDrafts.length})`}}
+function persistImportState(){if(window.__importState)localStorage.setItem("parts_import_state",JSON.stringify(window.__importState));else localStorage.removeItem("parts_import_state")}
+function setImportStatus(kind,title,detail,percent,retry=false){const box=$("importStatus");box.style.display="block";box.className="import-status "+(kind||"");$("importTitle").textContent=title;$("importDetail").textContent=detail;$("importProgressBar").style.width=Math.max(0,Math.min(100,Number(percent)||0))+"%";$("retryImportBtn").style.display=retry?"inline-block":"none"}
+window.__importState=JSON.parse(localStorage.getItem("parts_import_state")||"null");
+if(window.__importState){const st=window.__importState;setImportStatus("warning","Import is waiting to resume",`${st.imported||0} of ${st.expected||0} rows were confirmed before this page was closed. Pending batches: ${queue.length}.`,Math.round((st.imported||0)/(st.expected||1)*100),queue.length>0)}
+$("hideImportBtn").onclick=()=>{$("importStatus").style.display="none"};
+$("retryImportBtn").onclick=()=>{if(queue.length)syncQueue();else refreshFromSheets()};
 function setNet(){let on=navigator.onLine;$("netdot").classList.toggle("online",on);$("netlabel").textContent=on?"Online":"Offline"}
 window.addEventListener("online",()=>{setNet();if(queue.length)syncQueue();else refreshFromSheets()});window.addEventListener("offline",setNet);
 function jsonp(params){return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},25000);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
@@ -103,8 +110,10 @@ async function load(){
  setNet();
  if(!navigator.onLine){records=localRecords;render();return}
  // Full inventory is fetched only on first installation/no cache cursor. Later sessions use deltas.
- const hasCursor=!!syncCursors;
+ const hasLocalInventory=Array.isArray(localRecords)&&localRecords.length>0;
+ const hasCursor=!!syncCursors&&hasLocalInventory;
  if(hasCursor){records=localRecords;render();if(queue.length){syncQueue();return}await refreshFromSheets();return}
+ if(syncCursors&&!hasLocalInventory){syncCursors=null;localStorage.removeItem("parts_cursors")}
  try{
   let res=await jsonp({action:"list"});
   records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];countHistory=res.countHistory||[];
@@ -118,7 +127,7 @@ async function refreshFromSheets(){
  if(!syncCursors){await load();return}
  let anyChanged=false,more=true,rounds=0;
  try{
-  while(more&&rounds++<10){
+  while(more&&rounds++<30){
    const res=await jsonp({action:"changes",since:syncCursors.changes||0,activitySince:syncCursors.activity||0,historySince:syncCursors.history||0});
    if(res.resetRequired){syncCursors=null;localStorage.removeItem("parts_cursors");await load();return}
    (res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
@@ -140,7 +149,16 @@ async function syncQueue(){
    let item=queue[0];
    try{
     let response=item.action==="import"?await postApi("import",item.payload):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
-    if(item.action==="import"&&window.__importResult){window.__importResult.imported+=Number(response.imported||0);window.__importResult.added+=Number(response.added||0);window.__importResult.updated+=Number(response.updated||0)}
+    if(item.action==="import"&&Array.isArray(response.records)){
+     response.records.forEach(record=>applyDeltaRecord({id:record.id,operation:"upsert",record}));
+    }
+    if(item.action==="import"&&window.__importState){
+     const st=window.__importState;
+     st.imported+=Number(response.imported||0);st.added+=Number(response.added||0);st.updated+=Number(response.updated||0);st.changed+=Number(response.changed||0);st.unchanged+=Number(response.unchanged||0);st.confirmedBatches++;
+     const pct=Math.min(100,Math.round(st.imported/st.expected*100));
+     setImportStatus("",`Uploading to Google Sheets: ${st.imported.toLocaleString()} / ${st.expected.toLocaleString()} confirmed`,
+       `Batch ${st.confirmedBatches} of ${st.totalBatches} accepted by the server · Destination tab: ${response.targetSheet||"Inventory"}`,pct);
+    }
     // If the same device queued another edit to this exact record, chain it from the
     // version just confirmed by the server. Other-user edits still trigger conflict checks.
     if(item.action==="save"&&response.version!==undefined){
@@ -153,7 +171,13 @@ async function syncQueue(){
     if(String(e.message||e).includes("CONFLICT:")){
      conflictDrafts.unshift({id:String(Date.now())+"_"+String(Math.floor(Math.random()*1e6)),action:item.action,payload:item.payload,reason:String(e.message||e),createdAt:new Date().toISOString()});
      queue.shift();saveLocal();conflictCount++;
-    }else{failed=true;break}
+    }else{
+     failed=true;
+     window.__importLastError=String(e.message||e);
+     window.__importFailedBatch=Number(item.payload?.batchNumber||0);
+     if(window.__importState){window.__importState.lastError=window.__importLastError;window.__importState.failedBatch=window.__importFailedBatch;persistImportState()}
+     break;
+    }
    }
   }
  }finally{isSyncing=false}
@@ -161,12 +185,27 @@ async function syncQueue(){
  await refreshFromSheets();
  if(conflictCount)toast(`${conflictCount} edit(s) conflicted. Your changes are preserved; review and reapply them against the latest record.`);
  else if(!queue.length&&!failed){
-  if(window.__importCount){let want=window.__importCount,result=window.__importResult||{imported:0,added:0,updated:0};window.__importCount=0;window.__importResult=null;
-   if(result.imported===want)toast(`Google Sheets confirmed ${result.imported} rows: ${result.added} added, ${result.updated} matched.`);
-   else toast(`Google Sheets confirmed ${result.imported} of ${want} rows. Check the import activity and retry remaining rows.`);
+  if(window.__importState){
+   const st=window.__importState;
+   if(st.imported===st.expected){
+    const partSet=new Set(st.partNumbers);
+    const visible=records.filter(r=>!String(r.Location||"").trim()&&partSet.has(String(r["Part no."]||"").trim().toUpperCase())).length;
+    const complete=visible>=st.expected;
+    const summary=`${st.imported.toLocaleString()} / ${st.expected.toLocaleString()} catalog rows confirmed by Google Sheets · ${st.added.toLocaleString()} added · ${st.updated.toLocaleString()} matched · ${st.changed.toLocaleString()} changed · ${st.unchanged.toLocaleString()} unchanged.`;
+    const visibility=complete?`${visible.toLocaleString()} imported catalog records are now visible in the HTML inventory.`:`${visible.toLocaleString()} of ${st.expected.toLocaleString()} are currently visible in HTML; use Sync now to reconcile the remaining records.`;
+    setImportStatus(complete?"success":"warning",complete?"Import complete":"Sheets confirmed; HTML refresh needs review",summary+" "+visibility,100,!complete);
+    toast(complete?`Import complete: ${visible.toLocaleString()} records visible in HTML.`:`Import confirmed in Sheets; HTML currently shows ${visible} of ${st.expected}.`);
+   }else{
+    setImportStatus("warning","Import count mismatch",`${st.imported} of ${st.expected} rows were confirmed. The remaining batches are not being reported as successful.`,Math.round(st.imported/st.expected*100),true);
+    toast(`Google Sheets confirmed ${st.imported} of ${st.expected} rows. Pending batches are retained.`);
+   }
+   window.__importState=null;persistImportState();
   }else toast("All changes synchronized with Google Sheets");
  }
- if(failed)toast("Some changes are still waiting to sync. Your local cache is retained; synchronization will retry when the connection is stable.");
+ if(failed){
+  if(window.__importState){const st=window.__importState;const detail=`${st.imported} of ${st.expected} rows confirmed. Failed batch: ${window.__importFailedBatch||"unknown"} of ${st.totalBatches}. ${window.__importLastError||"The server did not confirm this batch."} Unconfirmed batches remain in this device's pending queue.`;setImportStatus("warning","Import paused — no false success shown",detail,Math.round(st.imported/st.expected*100),true)}
+  toast("Some changes are still waiting to sync. Your local cache and pending import batches are retained.");
+ }
 }
 
 function currentDate(){return $("countDate").value}
@@ -206,27 +245,57 @@ function mapHeader(k){let low=normHead(k);if(!low)return null;const aliases={'pa
 function importedRecord(source){let out=Object.fromEntries(IMPORT_FIELDS.map(h=>[h,'']));Object.entries(source||{}).forEach(([k,v])=>{let target=mapHeader(k);if(IMPORT_FIELDS.includes(target)){if(v===null||v===undefined)v='';if(typeof v==='string')v=v.trim();out[target]=v}});out['Part no.']=String(out['Part no.']??'').trim();return out}
 function validateImportColumns(items){if(!Array.isArray(items)||!items.length)throw Error('The selected file contains no inventory rows');let available=new Set(Object.keys(items[0]||{}).map(mapHeader).filter(x=>IMPORT_FIELDS.includes(x)));let missing=IMPORT_FIELDS.filter(x=>!available.has(x));if(missing.length)throw Error('The import file must contain these five columns: '+IMPORT_FIELDS.join(', ')+'. Missing: '+missing.join(', '))}
 function loadSheetJS(){return new Promise((res,rej)=>{if(window.XLSX)return res();let s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res();s.onerror=()=>rej(Error('Could not load the Excel reader. Check your internet connection or save the file as CSV.'));document.head.appendChild(s)})}
-async function readExcel(file){await loadSheetJS();let wb=XLSX.read(await file.arrayBuffer(),{type:'array'});let best=null;for(const name of wb.SheetNames){let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:''});let hi=rows.findIndex(r=>r.some(c=>mapHeader(c)==='Part no.'));if(hi<0)continue;let heads=rows[hi];let mapped=heads.map(mapHeader);let complete=IMPORT_FIELDS.every(f=>mapped.includes(f));if(!complete)continue;let score=IMPORT_FIELDS.filter(f=>mapped.includes(f)).length;if(!best||score>best.score)best={score,heads,data:rows.slice(hi+1)}}if(!best)throw Error('No worksheet contains all five required columns: '+IMPORT_FIELDS.join(', '));return best.data.filter(r=>r.some(v=>String(v).trim()!=='')).map(r=>Object.fromEntries(best.heads.map((h,i)=>[h,r[i]??'']).filter(([h])=>String(h).trim()!=='')))}
+async function readExcel(file){
+ await loadSheetJS();
+ const book=XLSX.read(await file.arrayBuffer(),{type:'array'});
+ const candidates=[];
+ for(const name of book.SheetNames){
+  const rows=XLSX.utils.sheet_to_json(book.Sheets[name],{header:1,raw:true,defval:''});
+  const headerIndex=rows.findIndex(r=>r.some(c=>mapHeader(c)==='Part no.'));
+  if(headerIndex<0)continue;
+  const heads=rows[headerIndex],mapped=heads.map(mapHeader);
+  if(!IMPORT_FIELDS.every(f=>mapped.includes(f)))continue;
+  const dataRows=rows.slice(headerIndex+1).filter(r=>r.some(v=>String(v).trim()!==''));
+  const items=dataRows.map(r=>Object.fromEntries(heads.map((h,i)=>[h,r[i]??'']).filter(([h])=>String(h).trim()!=='')));
+  candidates.push({name,items,scannedRows:dataRows.length,score:IMPORT_FIELDS.filter(f=>mapped.includes(f)).length});
+ }
+ if(!candidates.length)throw Error('No worksheet contains all five required columns: '+IMPORT_FIELDS.join(', '));
+ // Prefer the workbook's canonical PARTS tab. This avoids accidentally selecting
+ // a copy/report worksheet that also contains the same five headers.
+ candidates.sort((a,b)=>((normHead(b.name)==='parts')?1:0)-((normHead(a.name)==='parts')?1:0)||b.score-a.score);
+ return candidates[0];
+}
 async function importFile(file){
- let items=[],lname=file.name.toLowerCase(),text='';
- if(/\.xlsx?$/.test(lname)){items=await readExcel(file)}
- else{
+ if(queue.length||isSyncing)throw Error('Please let the pending changes finish synchronizing before starting a new import.');
+ let items=[],sourceSheet='File',scannedRows=0,text='';
+ const lname=file.name.toLowerCase();
+ if(/\.xlsx?$/.test(lname)){
+  const parsed=await readExcel(file);items=parsed.items;sourceSheet=parsed.name;scannedRows=parsed.scannedRows;
+ }else{
   text=await file.text();
   if(lname.endsWith('.json')){let parsed=JSON.parse(text);items=Array.isArray(parsed)?parsed:(parsed.records||parsed.data||[]);if(!Array.isArray(items))throw Error('JSON file does not contain a records array')}
   else{let rows=parseCSV(text);if(rows.length<2)throw Error('CSV has no inventory records');let heads=rows.shift();items=rows.map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])))}
+  scannedRows=items.length;
  }
  validateImportColumns(items);
  const normalized=items.map(importedRecord).filter(r=>r['Part no.']&&r['Part no.'].toLowerCase()!=='total');
+ const totalRows=items.filter(r=>String(r['Part no.']??r['Part no']??'').trim().toLowerCase()==='total').length;
  if(!normalized.length)throw Error('No valid part numbers found in the selected file');
  if(!navigator.onLine)throw Error('Connect to the internet before importing. No import was queued or saved only on this device.');
- const duplicateCount=normalized.length-new Set(normalized.map(r=>r['Part no.'].toUpperCase())).size;
- const message=`Import ${normalized.length} catalog rows into Google Sheets?\n\nOnly these columns will be imported: Part no., Part Description, SRP, Cost, and End Inv.\nAll other columns will stay blank on new rows. Existing location/count records will not be overwritten.${duplicateCount?`\n\nDuplicate part numbers in this file: ${duplicateCount}`:''}`;
- if(!confirm(message))return;
- window.__importCount=normalized.length;
- window.__importResult={imported:0,added:0,updated:0};
- const batchSize=5;
- for(let i=0;i<normalized.length;i+=batchSize)enqueue('import',{records:normalized.slice(i,i+batchSize),by:activeProfile});
- toast(`Sending ${normalized.length} catalog rows to Google Sheets…`);
+ if(queue.length)throw Error('There are pending changes. Synchronize them before importing this workbook.');
+ const partNumbers=normalized.map(r=>String(r['Part no.']).trim().toUpperCase());
+ const duplicateCount=partNumbers.length-new Set(partNumbers).size;
+ if(duplicateCount)throw Error(`The selected sheet contains ${duplicateCount} duplicate Part no. values. Remove duplicates before importing so no catalog row is ambiguous.`);
+ const batchSize=25,totalBatches=Math.ceil(normalized.length/batchSize);
+ const summary=`Read ${normalized.length.toLocaleString()} valid parts from ${sourceSheet}${totalRows?` (${totalRows} Total summary row skipped)`:''}. These five fields will be sent to the Inventory tab: Part no., Part Description, SRP, Cost, and End Inv. The other fields remain blank on new catalog rows.`;
+ if(!confirm(summary+`\n\nSend ${normalized.length.toLocaleString()} rows to Google Sheets in ${totalBatches} confirmed batches?`))return;
+ window.__importState={expected:normalized.length,imported:0,added:0,updated:0,changed:0,unchanged:0,confirmedBatches:0,totalBatches,partNumbers,fileName:file.name,lastError:"",failedBatch:0};window.__importLastError="";window.__importFailedBatch=0;persistImportState();
+ setImportStatus("",`Preparing ${normalized.length.toLocaleString()} catalog rows`,`${scannedRows.toLocaleString()} non-empty rows read from ${sourceSheet}; ${totalRows} summary rows skipped. Destination: Google Sheets → Inventory.`,0);
+ for(let i=0;i<normalized.length;i+=batchSize){
+  const batch=normalized.slice(i,i+batchSize);
+  enqueue('import',{records:batch,by:activeProfile,batchNumber:Math.floor(i/batchSize)+1,totalBatches,fileName:file.name});
+ }
+ setImportStatus("",`Sending ${normalized.length.toLocaleString()} rows to Google Sheets`,`0 / ${normalized.length.toLocaleString()} rows confirmed · ${totalBatches} batches · Destination: Inventory`,0);
  syncQueue();
 }
 $('importBtn').onclick=()=>$('fileInput').click();$('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;try{await importFile(f)}catch(err){toast('Import failed: '+err.message)}finally{e.target.value=''}};$('csvBtn').onclick=exportCSV;$('backupBtn').onclick=exportBackup;
