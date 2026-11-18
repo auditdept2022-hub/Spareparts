@@ -1,4 +1,4 @@
-const CACHE = "parts-inventory-shell-v8";
+const CACHE = "parts-inventory-shell-v9";
 const FILES = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
