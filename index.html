@@ -124,6 +124,13 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
  .top select#profile{height:36px;line-height:36px;width:104px;max-width:104px;font-size:13px;padding:0 26px 0 30px;background-position:left 10px center,right 9px center}
  .notifpanel{left:8px;right:8px;width:auto}
 }
+
+/* MOBILE LIST: part number + description on ONE line, count pill at the right */
+.compactid{display:flex;align-items:center;gap:8px;min-width:0}
+.compactid strong{flex:none;font-size:13px;color:#193d73}
+.compactid .compactdesc{flex:1 1 auto;min-width:0;margin:0;font-size:13px;font-weight:650;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compactid .pill{flex:none;margin-left:auto}
+.compactinfo{margin-top:2px}
 </style>
 </head>
 <body>
@@ -593,7 +600,7 @@ function render(){updateToolbarToggle();let q=$("search").value.trim().toLowerCa
  let pages=Math.max(1,Math.ceil(filtered.length/pageSize));page=Math.min(page,pages);let slice=filtered.slice((page-1)*pageSize,page*pageSize);$("resultLabel").textContent=`Showing ${filtered.length?((page-1)*pageSize+1):0}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} parts`;
  $("prev").disabled=page<=1;$("next").disabled=page>=pages;
  $("rows").innerHTML=slice.map(r=>{let v=isVariance(r,dt);return `<tr class="clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><td class="part">${esc(r["Part no."])}</td><td class="desc" title="${esc(r["Part Description"])}">${esc(r["Part Description"])}</td><td>${money(r.SRP)}</td><td>${money(r.Cost)}</td><td>${esc(r["End Inv."])}</td><td>${esc(statusFor(r,dt))}</td><td>${esc(balanceFor(r,dt)===""?"—":balanceFor(r,dt))}</td><td>${esc(counterFor(r,dt)||"—")}</td><td>${esc(r.Location||"—")}</td><td>${countCell(r[dt],r.id,v)}</td><td class="desc">${esc(r.Remarks||"—")}</td></tr>`}).join("")||`<tr><td colspan="11" class="empty">No matching parts found.</td></tr>`;
- $("cards").innerHTML=slice.map(r=>{let v=isVariance(r,dt),c=isCounted(r[dt]);return `<article class="compactrow clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><div class="compactmain"><div class="compactid"><strong>${esc(r["Part no."])}</strong><span class="pill ${v?'bad':c?'done':'pending'}">${c?esc(r[dt]):'Not counted'}</span></div><div class="compactdesc">${esc(r["Part Description"])}</div><div class="compactinfo"><span>End Inv. <b>${esc(r["End Inv."]??'—')}</b></span><span>Count <b class="${v?'variance':''}">${esc(c?r[dt]:'—')}</b></span><span>${esc(r.Location||'No location')}</span></div></div></article>`}).join("")||`<div class="empty">No matching parts found.</div>`;
+ $("cards").innerHTML=slice.map(r=>{let v=isVariance(r,dt),c=isCounted(r[dt]);return `<article class="compactrow clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><div class="compactmain"><div class="compactid"><strong>${esc(r["Part no."])}</strong><span class="compactdesc">${esc(r["Part Description"])}</span><span class="pill ${v?'bad':c?'done':'pending'}">${c?esc(r[dt]):'Not counted'}</span></div><div class="compactinfo"><span>End Inv. <b>${esc(r["End Inv."]??'—')}</b></span><span>Count <b class="${v?'variance':''}">${esc(c?r[dt]:'—')}</b></span><span>${esc(r.Location||'No location')}</span></div></div></article>`}).join("")||`<div class="empty">No matching parts found.</div>`;
  $("pendingSync").textContent=queue.length;saveLocal()}
 function countCell(v,id,variance=false){return `<span class="pill ${variance?'bad':isCounted(v)?'done':'pending'}">${!isCounted(v)?"Not counted":esc(v)}</span>`}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function attr(v){return encodeURIComponent(String(v??"" )).replace(/['!()*]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase())}function money(v){return v===""||v===null?"—":Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
