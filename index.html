@@ -42,9 +42,6 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .compactdetails summary{font-size:10px}.compactdetailgrid{padding:5px 0 0;gap:4px}
 .formgrid{gap:8px}.modalbody{padding:12px}.modalhead{padding:10px 12px}.modalfoot{padding:8px 12px}.field label{margin-bottom:2px}.field input,.field select,.field textarea{padding:7px 9px}
 @media(max-width:760px){.top{padding:7px 10px}.wrap{padding:8px 8px 36px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.stat{padding:5px 6px}.stat .k{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat strong{font-size:15px}.stat small{display:none}.toolbar{padding:7px}.compactrow{padding:5px 8px}.modalbody,.modalhead{padding:10px}.modalfoot{padding:8px 10px}}
-/* Compact edit/count popup on mobile */
-@media(max-width:760px){
-.modalback{padding:6px}
 /* HAMBURGER MENU / DRAWER */
 .top .menubtn{position:relative;width:36px;height:36px;padding:0;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
 .top .menubtn svg{width:20px;height:20px}.menudot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#f5b335;border:1.5px solid var(--navy)}
@@ -63,6 +60,9 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .rownum{color:var(--muted);font-weight:600;font-size:11px;text-align:left;white-space:nowrap;padding-right:6px}th.rownum{width:1%}
 /* LOCK PAGE SCROLL WHILE A POPUP IS OPEN */
 html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-behavior:none}.modalback{overscroll-behavior:contain}.modalback .modal{overscroll-behavior:contain}
+/* Compact edit/count popup on mobile */
+@media(max-width:760px){
+.modalback{padding:6px}
 .modal{max-height:98vh;border-radius:14px}
 .modalhead{padding:8px 10px;position:sticky;top:0;background:#fff;z-index:2}
 .modalhead h2{font-size:15px}
