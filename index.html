@@ -124,7 +124,7 @@ async function importWithRetry(payload,epoch){
   try{return await postApi("import",payload)}
   catch(e){
    lastErr=e;const msg=String(e.message||e);
-   const fatal=/CONFLICT:|Incorrect access PIN|Invalid |limited to|not configured|No records|Unknown action|missing the Part/i.test(msg);
+   const fatal=/CONFLICT:|Incorrect access PIN|Invalid |limited to|not configured|No records|Unknown action|missing the Part|already exists|data validation|violates/i.test(msg);
    if(fatal||epoch!==syncEpoch||cancelImportRequested||!navigator.onLine||attempt===MAX)throw e;
    const wait=3000*attempt;
    setImportStatus("warning",`Batch ${payload.batchNumber||""} did not respond — retrying (${attempt}/${MAX-1})`,`${msg}. Waiting ${wait/1000}s, then sending the same batch again. This is safe: imported rows are matched, not duplicated.`,Math.round(20+((Number(window.__importState?.imported||0))/Math.max(1,Number(window.__importState?.expected||1)))*80),false);
@@ -186,6 +186,7 @@ async function refreshFromSheets(){
 // ---- Diagnostics: shows exactly why Google Sheets is not responding ----
 function explainServerError(msg){
  msg=String(msg||"");
+ if(/already exists|data validation|violates/i.test(msg))return "The Inventory sheet has a data-validation rule that rejects the write. Paste the new Code.gs, Save, and Deploy > Manage deployments > Edit > New version > Deploy (it turns that rule into a warning). Quick manual fix: in Google Sheets select the Part no. and Location columns > Data > Data validation > Remove rules.";
  if(/Unknown action/i.test(msg))return "Google is running an OLD Code.gs that does not know this action. In Apps Script: paste the new Code.gs, Save, then Deploy > Manage deployments > Edit > New version > Deploy.";
  if(/Incorrect access PIN/i.test(msg))return "The Apps Script has an ACCESS_PIN set, but this app does not send a PIN. Remove the ACCESS_PIN script property (Project Settings > Script properties) or tell me and I will add PIN support.";
  if(/Could not reach/i.test(msg))return "The browser could not load the Apps Script URL. Check the deployment: Execute as 'Me' and Who has access 'Anyone', and that the URL in index.html is the latest /exec URL. Also try without ad-blockers/VPN.";
