@@ -59,7 +59,8 @@ jobs:
       - name: Create Android project
         run: |
           npx cap add android
-          cp -r android-assets/res/. android/app/src/main/res/
+          if [ -f android-assets.zip ]; then rm -rf android-assets; unzip -q android-assets.zip; fi
+          if [ -d android-assets/res ]; then cp -r android-assets/res/. android/app/src/main/res/; else echo "No android-assets found, using default icons"; fi
           npx cap sync android
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
@@ -84,7 +85,7 @@ jobs:
             KS_PASS="$KS_PASS_SECRET"; KS_ALIAS="$KS_ALIAS_SECRET"; KEY_PASS="${KS_KEYPASS_SECRET:-$KS_PASS_SECRET}"
           else
             echo "Using the built-in keystore signing/parts-inventory.keystore"
-            KS="signing/parts-inventory.keystore"
+            KS="signing/parts-inventory.keystore"; [ -f "$KS" ] || KS="parts-inventory.keystore"
             KS_PASS="parts-inventory"; KS_ALIAS="partsinventory"; KEY_PASS="parts-inventory"
           fi
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
