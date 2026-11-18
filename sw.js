@@ -1,4 +1,4 @@
-const CACHE = "parts-inventory-shell-v45";
+const CACHE = "parts-inventory-shell-v46";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png"];
 
 self.addEventListener("install", event => {
