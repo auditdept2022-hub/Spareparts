@@ -44,7 +44,10 @@ jobs:
           "$SDKM" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install Capacitor
-        run: npm ci
+        run: |
+          ls -la
+          test -f package.json || { echo "ERROR: package.json is missing from the repo root. Upload it next to index.html."; exit 1; }
+          if [ -f package-lock.json ]; then npm ci || npm install; else npm install; fi
 
       - name: Copy web app into www
         run: |
