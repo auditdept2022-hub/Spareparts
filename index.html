@@ -42,6 +42,30 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .compactdetails summary{font-size:10px}.compactdetailgrid{padding:5px 0 0;gap:4px}
 .formgrid{gap:8px}.modalbody{padding:12px}.modalhead{padding:10px 12px}.modalfoot{padding:8px 12px}.field label{margin-bottom:2px}.field input,.field select,.field textarea{padding:7px 9px}
 @media(max-width:760px){.top{padding:7px 10px}.wrap{padding:8px 8px 36px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.stat{padding:5px 6px}.stat .k{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat strong{font-size:15px}.stat small{display:none}.toolbar{padding:7px}.compactrow{padding:5px 8px}.modalbody,.modalhead{padding:10px}.modalfoot{padding:8px 10px}}
+/* Compact edit/count popup on mobile */
+@media(max-width:760px){
+.modalback{padding:6px}
+.modal{max-height:98vh;border-radius:14px}
+.modalhead{padding:8px 10px;position:sticky;top:0;background:#fff;z-index:2}
+.modalhead h2{font-size:15px}
+.modalhead button{padding:5px 10px}
+.modalbody{padding:8px 10px}
+.modalbody .notice{display:none}
+.formgrid{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 7px}
+.formgrid .field{grid-column:1/-1}
+.formgrid .field:nth-child(3),.formgrid .field:nth-child(4),.formgrid .field:nth-child(5){grid-column:span 2}
+.formgrid .field:nth-child(6),.formgrid .field:nth-child(7){grid-column:span 3}
+.field label{font-size:11px;margin-bottom:1px}
+.field input,.field select,.field textarea{padding:5px 8px;font-size:13px;border-radius:8px}
+.field textarea{min-height:38px;height:38px}
+#existingCountNote{font-size:10.5px;line-height:1.3;margin-top:3px!important}
+#clearCountBtn{padding:4px 10px;font-size:12px;margin-top:4px!important}
+#countHistoryList{max-height:70px!important;padding:5px 8px!important}
+#countHistoryList .historyitem{padding:4px 0;font-size:12px}
+#countHistoryList small{font-size:11px}
+.modalfoot{padding:7px 10px;position:sticky;bottom:0;background:#fff;z-index:2}
+.modalfoot button{padding:8px 12px;font-size:13px}
+}
 </style>
 </head>
 <body>
