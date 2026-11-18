@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#14233b">
 <title>Parts Inventory</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--navy:#14233b;--blue:#2563eb;--bg:#f3f6fb;--card:#fff;--text:#172033;--muted:#68758a;--line:#e4e9f1;--green:#168653;--red:#c43d4b;--amber:#a96808;--shadow:0 8px 26px rgba(20,35,59,.07)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:650}.primary{background:var(--blue);color:white}.secondary{background:#eaf0fb;color:#1c3764}.danger{background:#fff0f1;color:var(--red)}.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.top{background:var(--navy);color:white;padding:16px max(18px,calc((100vw - 1440px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5}.brand{display:flex;align-items:center;gap:10px}.logo{width:38px;height:38px;border-radius:12px;background:#29466f;display:grid;place-items:center;font-size:20px}.brand h1{font-size:17px;margin:0}.brand small{display:block;color:#b9c8dd;font-size:11px}.topright{display:flex;align-items:center;gap:9px}.top select{background:#263b5a;color:white;border:1px solid #49617f;border-radius:9px;padding:9px;max-width:150px}.status{font-size:12px;color:#d6e3f4;display:flex;align-items:center;gap:6px}.dot{width:8px;height:8px;border-radius:50%;background:#efb23f;display:inline-block}.dot.online{background:#42d392}.wrap{max-width:1440px;margin:auto;padding:22px 20px 60px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow)}.stat .k{color:var(--muted);font-size:12px}.stat strong{display:block;font-size:25px;margin-top:5px;letter-spacing:-.5px}.stat small{color:var(--muted)}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.toolbar{padding:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.search{flex:1;min-width:210px;position:relative}.search input{width:100%;padding:11px 13px 11px 37px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe}.search span{position:absolute;left:13px;top:9px;color:var(--muted);font-size:17px}.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:9px;padding:10px;background:white;color:var(--text);width:100%}.toolbar select{width:auto;min-width:130px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#fafbfd;position:sticky;top:0;z-index:1}td{font-size:13px}tbody tr:hover{background:#f8faff}.clickrow{cursor:pointer}.clickrow:active{background:#eef3ff}.clickrow:focus-visible{outline:2px solid #2563eb;outline-offset:-2px}.part{font-weight:700;color:#193d73}.desc{max-width:260px;overflow:hidden;text-overflow:ellipsis}.pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 8px;font-size:11px;background:#eef2f8;color:#506078}.pill.done{background:#e8f7ef;color:#16774a}.pill.pending{background:#fff5df;color:#98630b}.actions{display:flex;gap:6px}.actions button{padding:7px 9px;font-size:12px}.empty{text-align:center;padding:44px;color:var(--muted)}.foot{padding:12px 15px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;gap:10px}.pagination{display:flex;gap:7px}.pagination button{padding:7px 11px}.modalback{position:fixed;inset:0;background:#0b1729a8;z-index:20;display:none;align-items:center;justify-content:center;padding:15px}.modalback.show{display:flex}.modal{width:min(720px,100%);max-height:92vh;overflow:auto;background:white;border-radius:18px;box-shadow:0 20px 80px #0004}.modalhead{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalhead h2{margin:0;font-size:18px}.modalbody{padding:20px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field label{display:block;font-size:12px;font-weight:700;color:#536177;margin-bottom:6px}.field.full{grid-column:1/-1}.field textarea{min-height:75px;resize:vertical}.modalfoot{padding:15px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}.notice{padding:10px 13px;border-radius:10px;background:#eff5ff;color:#36527b;font-size:12px;margin-bottom:14px}.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:#17263e;color:white;padding:11px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:50;box-shadow:var(--shadow);max-width:90vw}.toast.show{opacity:1;transform:translate(-50%,0)}.mobilecards{display:none}.tabs{display:flex;gap:7px}.tabs button{background:transparent;color:var(--muted);padding:9px 12px}.tabs button.active{background:#eaf0fb;color:#214c91}.history{padding:16px}.historyitem{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}.historyitem small{color:var(--muted)}
@@ -21,6 +23,8 @@ tbody tr.bal-ok:hover td{background:#c8ebd5}tbody tr.bal-over:hover td{backgroun
 th.sortable{cursor:pointer;user-select:none}th.sortable .sortarrows{display:inline-flex;flex-direction:column;margin-left:5px;vertical-align:middle;line-height:.75}
 th.sortable .sortarrows i{font-style:normal;font-size:8px;color:#b4bfd0;padding:1px 3px;cursor:pointer}th.sortable .sortarrows i:hover{color:#6d86b0}th.sortable .sortarrows i.on{color:var(--blue)}
 .mobsort{display:none}
+/* LOGO */
+.logo{background:#fff;overflow:hidden;padding:1px}.logo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit}
 /* COMPACT LAYOUT */
 body{font-size:13px;line-height:1.3}
 .top{padding:8px max(12px,calc((100vw - 1440px)/2))}.logo{width:30px;height:30px;border-radius:9px;font-size:16px}.brand h1{font-size:15px}.top select{padding:6px 8px}
@@ -40,7 +44,7 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 </head>
 <body>
 <header class="top">
- <div class="brand"><div class="logo">▦</div><div><h1>Parts Inventory</h1><small>Inventory counting & tracking</small></div></div>
+ <div class="brand"><div class="logo"><img src="icon-192.png" alt="Spare Parts logo"></div><div><h1>Parts Inventory</h1><small>Inventory counting & tracking</small></div></div>
  <div class="topright"><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
 </header>
 <main class="wrap">
@@ -54,7 +58,7 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
   <div class="toolbar">
    <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
    <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
-   <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select>
+   <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select><button class="ghost" id="addDateBtn" title="Add a new count date">＋ Date</button><input type="date" id="newDateInput" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
    <select id="sortSel" class="mobsort" aria-label="Sort"><option value="">Sort: default</option></select><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
@@ -92,10 +96,27 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz8I3-QNdbkqOgyAnwpd2hc80sxmyaUsEzJnPuqgUKRySj7eBZRe-4I-bzkvofnJ70Z8w/exec";
 const PROFILES = ["Edison","Karl","Laurence","Genesis"];
-const COUNT_FIELDS = ["Count (12/3/26)","Count (12/4/26)","Count (12/5/26)","Count (12/6/26)"];
+const COUNT_FIELDS = [];
 const IMPORT_FIELDS = ["Part no.","Part Description","SRP","Cost","End Inv."];
-const COUNT_BY_FIELDS = COUNT_FIELDS.map(f=>"Counted By ("+f.slice(7,-1)+")");
-const HEADERS = ["Part no.","Part Description","SRP","Cost","End Inv.","Status","Balance","Profile","Location",...COUNT_FIELDS,...COUNT_BY_FIELDS,"Remarks","Updated By","Updated At","Version"];
+const COUNT_BY_FIELDS = [];
+const HEADERS = [];
+const DEFAULT_DATES=["12/3/26","12/4/26","12/5/26","12/6/26"];
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function dKey(d){const m=String(d).match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);return m?(2000+ +m[3])*10000+ +m[1]*100+ +m[2]:0}
+function dateLabel(d){const m=String(d).match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);return m?MONTHS[m[1]-1]+" "+m[2]+", "+(2000+ +m[3]):d}
+let countDates=[];
+function fillDateSelects(){["countDate","fDate"].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML=COUNT_FIELDS.map(f=>`<option value="${f}">${dateLabel(f.slice(7,-1))}</option>`).join("");s.value=COUNT_FIELDS.includes(cur)?cur:COUNT_FIELDS[0]})}
+function setCountDates(list){
+ const next=[...new Set([...DEFAULT_DATES,...(list||[])].map(String).filter(d=>dKey(d)))].sort((a,b)=>dKey(a)-dKey(b));
+ if(COUNT_FIELDS.length&&next.join("|")===countDates.join("|"))return false;
+ countDates=next;
+ COUNT_FIELDS.length=0;COUNT_FIELDS.push(...next.map(d=>"Count ("+d+")"));
+ COUNT_BY_FIELDS.length=0;COUNT_BY_FIELDS.push(...next.map(d=>"Counted By ("+d+")"));
+ HEADERS.length=0;HEADERS.push("Part no.","Part Description","SRP","Cost","End Inv.","Status","Balance","Profile","Location",...COUNT_FIELDS,...COUNT_BY_FIELDS,"Remarks","Updated By","Updated At","Version");
+ try{localStorage.setItem("parts_dates",JSON.stringify(next))}catch(e){}
+ fillDateSelects();return true
+}
+(function(){let saved=[];try{saved=JSON.parse(localStorage.getItem("parts_dates")||"[]")}catch(e){}setCountDates(saved)})();
 const $ = id => document.getElementById(id);
 let localRecords=JSON.parse(localStorage.getItem("parts_records")||"[]");
 let records=localRecords, activity=[], countHistory=[], page=1, pageSize=40, editId=null, activeTab="inventory";
@@ -197,7 +218,7 @@ async function load(){
  if(syncCursors&&!hasLocalInventory){syncCursors=null;localStorage.removeItem("parts_cursors")}
  try{
   let res=await jsonp({action:"list"});
-  records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];countHistory=res.countHistory||[];
+  if(res.dates)setCountDates(res.dates);records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];countHistory=res.countHistory||[];
   syncCursors=res.cursors||{changes:0,activity:activity.length,history:countHistory.length};saveCursors();saveLocal();render();renderHistory();
   if(queue.length)syncQueue();
  }catch(e){records=localRecords;render();toast("Using cached data: "+e.message)}
@@ -211,7 +232,7 @@ async function refreshFromSheets(){
   while(more&&rounds++<30){
    const res=await jsonp({action:"changes",since:syncCursors.changes||0,activitySince:syncCursors.activity||0,historySince:syncCursors.history||0});
    if(res.resetRequired){syncCursors=null;localStorage.removeItem("parts_cursors");await load();return}
-   (res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
+   if(res.dates&&setCountDates(res.dates))anyChanged=true;(res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
    if(res.activity?.length){activity=[...res.activity.reverse(),...activity].slice(0,150);anyChanged=true}
    if(res.countHistory?.length){countHistory=[...res.countHistory.reverse(),...countHistory].slice(0,500);anyChanged=true}
    syncCursors=res.cursors||syncCursors;saveCursors();
@@ -340,6 +361,11 @@ async function syncQueue(){
      const nextSame=queue.slice(1).find(next=>next.action==="save"&&String(next.payload?.id||"")===String(item.payload.id||""));
      if(nextSame){nextSame.payload.expectedVersion=Number(response.version);nextSame.payload.id=savedId}
     }
+    if(item.action==="save"&&response.record&&response.record["Part no."]){
+     const sid=String(response.id||item.payload.id||"");
+     const laterSame=queue.slice(1).some(n=>n.action==="save"&&(String(n.payload?.id||"")===sid||String(n.payload?.id||"")===String(item.payload.id||"")));
+     if(!laterSame)applyDeltaRecord({id:response.record.id,operation:"upsert",record:response.record});
+    }
     queue.shift();syncCompletedCount++;saveLocal();
    }catch(e){
     if(myEpoch!==syncEpoch)break;
@@ -395,14 +421,15 @@ function currentDate(){return $("countDate").value}
 function isCounted(v){return v!==""&&v!==null&&v!==undefined}
 function isVariance(r,dt){let c=r[dt],e=r["End Inv."];return isCounted(c)&&isCounted(e)&&Number.isFinite(Number(c))&&Number.isFinite(Number(e))&&Number(c)!==Number(e)}
 function balanceFor(r,dt){return isCounted(r[dt])&&isCounted(r["End Inv."])&&Number.isFinite(Number(r[dt]))&&Number.isFinite(Number(r["End Inv."]))?Number(r[dt])-Number(r["End Inv."]):""}
+function counterFor(r,dt){return r["Counted By ("+dt.slice(7,-1)+")"]||(isCounted(r[dt])?r.Profile:"")||""}
 function balClass(r,dt){const b=balanceFor(r,dt);return b===""?"":b===0?"bal-ok":b>0?"bal-over":"bal-short"}
 function statusFor(r,dt){let b=balanceFor(r,dt);return b===""?"—":b===0?"Balanced":b>0?"Over":"Short"}
 function render(){let q=$("search").value.trim().toLowerCase(),filter=$("filter").value,dt=currentDate();let filtered=records.filter(r=>{let hay=[r["Part no."],r["Part Description"],r.Location,r.Remarks].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;let c=r[dt];if(filter==="counted"&&!isCounted(c))return false;if(filter==="uncounted"&&isCounted(c))return false;if(filter==="discrepancy"&&!isVariance(r,dt))return false;if(filter==="balanced"&&balanceFor(r,dt)!==0)return false;if(filter==="over"&&!(balanceFor(r,dt)>0))return false;if(filter==="short"&&!(balanceFor(r,dt)!==""&&balanceFor(r,dt)<0))return false;if(filter==="remarks"&&!String(r.Remarks||"").trim())return false;return true});filtered=sortRows(filtered,dt);let total=records.length,counted=records.filter(r=>isCounted(r[dt])).length,variance=records.filter(r=>isVariance(r,dt)).length;$("totalParts").textContent=total.toLocaleString();$("countedToday").textContent=counted.toLocaleString();$("discrepancies").textContent=variance.toLocaleString();$("todayLabel").textContent=$("countDate").selectedOptions[0].textContent;$("countHead").textContent=$("countDate").selectedOptions[0].textContent;
  let checkerCounts=PROFILES.map(name=>({name,count:records.filter(r=>(r["Counted By ("+dt.slice(7,-1)+")"]||r.Profile)===name&&isCounted(r[dt])).length}));$("checkerSummary").innerHTML='<span><b>Counted by:</b></span>'+checkerCounts.map(x=>`<span>${esc(x.name)} <b>${x.count}</b></span>`).join('');
  let pages=Math.max(1,Math.ceil(filtered.length/pageSize));page=Math.min(page,pages);let slice=filtered.slice((page-1)*pageSize,page*pageSize);$("resultLabel").textContent=`Showing ${filtered.length?((page-1)*pageSize+1):0}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} parts`;
  $("prev").disabled=page<=1;$("next").disabled=page>=pages;
- $("rows").innerHTML=slice.map(r=>{let v=isVariance(r,dt);return `<tr class="clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><td class="part">${esc(r["Part no."])}</td><td class="desc" title="${esc(r["Part Description"])}">${esc(r["Part Description"])}</td><td>${money(r.SRP)}</td><td>${money(r.Cost)}</td><td>${esc(r["End Inv."])}</td><td>${esc(statusFor(r,dt))}</td><td>${esc(balanceFor(r,dt)===""?"—":balanceFor(r,dt))}</td><td>${esc(r.Profile||"—")}</td><td>${esc(r.Location||"—")}</td><td>${countCell(r[dt],r.id,v)}</td><td class="desc">${esc(r.Remarks||"—")}</td></tr>`}).join("")||`<tr><td colspan="11" class="empty">No matching parts found.</td></tr>`;
- $("cards").innerHTML=slice.map(r=>{let v=isVariance(r,dt),c=isCounted(r[dt]);return `<article class="compactrow clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><div class="compactmain"><div class="compactid"><strong>${esc(r["Part no."])}</strong><span class="pill ${v?'bad':c?'done':'pending'}">${v?'Variance':c?'Counted':'Not counted'}</span></div><div class="compactdesc">${esc(r["Part Description"])}</div><div class="compactinfo"><span>End Inv. <b>${esc(r["End Inv."]??'—')}</b></span><span>Count <b class="${v?'variance':''}">${esc(c?r[dt]:'—')}</b></span><span>${esc(r.Location||'No location')}</span></div></div><details class="compactdetails"><summary>SRP, cost, profile, remarks and count history</summary><div class="compactdetailgrid"><div>SRP<b>${money(r.SRP)}</b></div><div>Cost<b>${money(r.Cost)}</b></div><div>Profile<b>${esc(r.Profile||'—')}</b></div><div>Location<b>${esc(r.Location||'—')}</b></div><div>Remarks<b>${esc(r.Remarks||'—')}</b></div>${COUNT_FIELDS.map(f=>`<div>${esc(f)}<b>${esc(r[f]??'—')||'—'}</b></div>`).join('')}</div></details></article>`}).join("")||`<div class="empty">No matching parts found.</div>`;
+ $("rows").innerHTML=slice.map(r=>{let v=isVariance(r,dt);return `<tr class="clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><td class="part">${esc(r["Part no."])}</td><td class="desc" title="${esc(r["Part Description"])}">${esc(r["Part Description"])}</td><td>${money(r.SRP)}</td><td>${money(r.Cost)}</td><td>${esc(r["End Inv."])}</td><td>${esc(statusFor(r,dt))}</td><td>${esc(balanceFor(r,dt)===""?"—":balanceFor(r,dt))}</td><td>${esc(counterFor(r,dt)||"—")}</td><td>${esc(r.Location||"—")}</td><td>${countCell(r[dt],r.id,v)}</td><td class="desc">${esc(r.Remarks||"—")}</td></tr>`}).join("")||`<tr><td colspan="11" class="empty">No matching parts found.</td></tr>`;
+ $("cards").innerHTML=slice.map(r=>{let v=isVariance(r,dt),c=isCounted(r[dt]);return `<article class="compactrow clickrow ${balClass(r,dt)}" tabindex="0" role="button" data-id="${attr(r.id)}"><div class="compactmain"><div class="compactid"><strong>${esc(r["Part no."])}</strong><span class="pill ${v?'bad':c?'done':'pending'}">${v?'Variance':c?'Counted':'Not counted'}</span></div><div class="compactdesc">${esc(r["Part Description"])}</div><div class="compactinfo"><span>End Inv. <b>${esc(r["End Inv."]??'—')}</b></span><span>Count <b class="${v?'variance':''}">${esc(c?r[dt]:'—')}</b></span><span>${esc(r.Location||'No location')}</span></div></div></article>`}).join("")||`<div class="empty">No matching parts found.</div>`;
  $("pendingSync").textContent=queue.length;saveLocal()}
 function countCell(v,id,variance=false){return `<span class="pill ${variance?'bad':isCounted(v)?'done':'pending'}">${!isCounted(v)?"Not counted":esc(v)+(variance?' · variance':'')}</span>`}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function attr(v){return encodeURIComponent(String(v??"" )).replace(/['!()*]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase())}function money(v){return v===""||v===null?"—":Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -551,13 +578,34 @@ $('importBtn').onclick=()=>{
 };
 $('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(importPrepReload){setImportStatus("","Reloading latest data…","Refreshing from Google Sheets before the import starts.",0,false);await importPrepReload;importPrepReload=null}await importFile(f);e.target.value=''};
 $('csvBtn').onclick=exportCSV;
-$("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(navigator.onLine?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(navigator.onLine)syncQueue()};
+$("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":($("fCount").value!==""?$("fCount").value:prevCount);if(String(prevCount??"")!==String(newCount??"")){obj[byKey]=newCount===""?"":activeProfile;if(newCount!=="")obj.Profile=activeProfile}
+if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(navigator.onLine?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(navigator.onLine)syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
+async function addCountDate(ds){
+ const exists=countDates.includes(ds);
+ if(!exists){
+  if(!navigator.onLine){toast("Connect to the internet to add a new count date");return}
+  if(!confirm(`Add ${dateLabel(ds)} as a new count date?\n\nA new Count column is added to the Google Sheet and appears on every device.`))return;
+  try{toast("Adding date…");const res=await postApi("adddate",{date:ds,by:activeProfile});setCountDates(res.dates||[...countDates,ds])}
+  catch(err){alert(String(err.message||err).includes("Unknown action")?"Google is running an OLD Code.gs. Paste the new Code.gs, Save, then Deploy > Manage deployments > Edit > New version > Deploy.":"Could not add the date: "+(err.message||err));return}
+ }
+ $("countDate").value="Count ("+ds+")";page=1;render();toast("Counting date: "+dateLabel(ds))
+}
+$("addDateBtn").onclick=()=>{
+ const last=countDates[countDates.length-1].split("/").map(Number),nx=new Date(2000+last[2],last[0]-1,last[1]+1);
+ const iso=nx.getFullYear()+"-"+String(nx.getMonth()+1).padStart(2,"0")+"-"+String(nx.getDate()).padStart(2,"0");
+ const inp=$("newDateInput");inp.value=iso;
+ if(inp.showPicker){try{inp.showPicker();return}catch(e){}}
+ const t=prompt("New count date (M/D/YY), for example "+(nx.getMonth()+1)+"/"+nx.getDate()+"/"+String(nx.getFullYear()).slice(2),(nx.getMonth()+1)+"/"+nx.getDate()+"/"+String(nx.getFullYear()).slice(2));
+ if(!t)return;const m=t.trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/);if(!m){toast("Use the format M/D/YY");return}
+ addCountDate(+m[1]+"/"+ +m[2]+"/"+String(m[3]).slice(-2))
+};
+$("newDateInput").onchange=e=>{const v=e.target.value;if(!v)return;const [y,mo,da]=v.split("-").map(Number);if(y<2000||y>2099){toast("Choose a date from 2000 to 2099");return}addCountDate(mo+"/"+da+"/"+String(y).slice(2))};
 const SORT_COLS={part:"Part no.",desc:"Part description",srp:"SRP",cost:"Cost",end:"End Inv.",status:"Status",balance:"Balance",profile:"Profile",location:"Location",count:"Count",remarks:"Remarks"};
 const NUM_SORT={srp:1,cost:1,end:1,balance:1,count:1};
 let sortKey="",sortDir="asc";
-function sortVal(r,k,dt){switch(k){case"part":return r["Part no."];case"desc":return r["Part Description"];case"srp":return r.SRP;case"cost":return r.Cost;case"end":return r["End Inv."];case"status":return statusFor(r,dt)==="—"?"":statusFor(r,dt);case"balance":return balanceFor(r,dt);case"profile":return r.Profile;case"location":return r.Location;case"count":return r[dt];case"remarks":return r.Remarks}return""}
+function sortVal(r,k,dt){switch(k){case"part":return r["Part no."];case"desc":return r["Part Description"];case"srp":return r.SRP;case"cost":return r.Cost;case"end":return r["End Inv."];case"status":return statusFor(r,dt)==="—"?"":statusFor(r,dt);case"balance":return balanceFor(r,dt);case"profile":return counterFor(r,dt);case"location":return r.Location;case"count":return r[dt];case"remarks":return r.Remarks}return""}
 function sortRows(list,dt){if(!sortKey)return list;const num=!!NUM_SORT[sortKey],dir=sortDir==="asc"?1:-1;const blank=v=>v===""||v===null||v===undefined;return list.map((r,i)=>[r,i]).sort((A,B)=>{const a=sortVal(A[0],sortKey,dt),b=sortVal(B[0],sortKey,dt),ba=blank(a),bb=blank(b);if(ba||bb)return ba&&bb?A[1]-B[1]:ba?1:-1;let c=num?Number(a)-Number(b):String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:"base"});return c?c*dir:A[1]-B[1]}).map(x=>x[0])}
 function updateSortUI(){document.querySelectorAll("th.sortable").forEach(t=>{t.querySelectorAll("i").forEach(i=>i.classList.toggle("on",t.dataset.sort===sortKey&&i.dataset.dir===sortDir))});const s=$("sortSel");if(s)s.value=sortKey?sortKey+"|"+sortDir:""}
 function setSort(k,d){if(sortKey===k&&sortDir===d){sortKey=""}else{sortKey=k;sortDir=d}page=1;updateSortUI();render()}
