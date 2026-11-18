@@ -1,0 +1,8 @@
+{
+  "appId": "com.partsinventory.app",
+  "appName": "Parts Inventory",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}

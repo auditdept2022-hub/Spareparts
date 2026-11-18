@@ -1,0 +1,13 @@
+{
+  "name": "parts-inventory-apk",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/filesystem": "^6.0.3",
+    "@capacitor/share": "^6.0.3"
+  },
+  "description": "Android APK wrapper (Capacitor) for the Parts Inventory web app"
+}
