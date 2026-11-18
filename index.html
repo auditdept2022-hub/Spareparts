@@ -32,7 +32,7 @@
    <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select>
    <button class="ghost" id="sortBtn">Sort A–Z</button><div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="backupBtn">Backup JSON</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
   </div>
-  <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
+  <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
   <div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div>
   <div id="checkerSummary" class="checker-summary"></div>
   <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
@@ -113,8 +113,27 @@ $("syncControlBtn").onclick=()=>{syncPaused=!syncPaused;persistSyncPaused();upda
 $("syncNowBtn").onclick=()=>{syncPaused=false;persistSyncPaused();updateSyncStatus();syncQueue()};
 function setNet(){let on=navigator.onLine;$("netdot").classList.toggle("online",on);$("netlabel").textContent=on?"Online":"Offline"}
 window.addEventListener("online",()=>{setNet();if(queue.length)syncQueue();else refreshFromSheets()});window.addEventListener("offline",setNet);
-function jsonp(params){return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},25000);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
-async function postApi(action,payload){return jsonp({action,payload:JSON.stringify(payload)})}
+function jsonp(params,timeoutMs=25000){window.__reqStart=Date.now();window.__reqAction=params.action;return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},timeoutMs);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
+async function postApi(action,payload){return jsonp({action,payload:JSON.stringify(payload)},action==="import"?75000:25000)}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// Import batches are idempotent (rows are matched by Part no., never duplicated), so a timed-out
+// or failed batch is safe to retry automatically. Other actions are never auto-retried.
+async function importWithRetry(payload,epoch){
+ const MAX=4;let lastErr;
+ for(let attempt=1;attempt<=MAX;attempt++){
+  try{return await postApi("import",payload)}
+  catch(e){
+   lastErr=e;const msg=String(e.message||e);
+   const fatal=/CONFLICT:|Incorrect access PIN|Invalid |limited to|not configured|No records|Unknown action|missing the Part/i.test(msg);
+   if(fatal||epoch!==syncEpoch||cancelImportRequested||!navigator.onLine||attempt===MAX)throw e;
+   const wait=3000*attempt;
+   setImportStatus("warning",`Batch ${payload.batchNumber||""} did not respond — retrying (${attempt}/${MAX-1})`,`${msg}. Waiting ${wait/1000}s, then sending the same batch again. This is safe: imported rows are matched, not duplicated.`,Math.round(20+((Number(window.__importState?.imported||0))/Math.max(1,Number(window.__importState?.expected||1)))*80),false);
+   await sleep(wait);
+   if(epoch!==syncEpoch||cancelImportRequested)throw lastErr;
+  }
+ }
+ throw lastErr;
+}
 function recordKey(r){return String(r["Part no."]||"").trim().toUpperCase()+"\u001f"+String(r.Location||"").trim().toUpperCase()}
 function normalize(r){let o={...r};HEADERS.forEach(h=>{if(o[h]===undefined)o[h]=""});o.id=String(r.id||recordKey(o));return o}
 function saveCursors(){localStorage.setItem("parts_cursors",JSON.stringify(syncCursors||{changes:0,activity:0,history:0}))}
@@ -163,6 +182,39 @@ async function refreshFromSheets(){
   if(anyChanged){saveLocal();render();renderHistory()}
  }catch(e){/* Keep the last confirmed local cache; retry on the next light check. */}
 }
+
+// ---- Diagnostics: shows exactly why Google Sheets is not responding ----
+function explainServerError(msg){
+ msg=String(msg||"");
+ if(/Unknown action/i.test(msg))return "Google is running an OLD Code.gs that does not know this action. In Apps Script: paste the new Code.gs, Save, then Deploy > Manage deployments > Edit > New version > Deploy.";
+ if(/Incorrect access PIN/i.test(msg))return "The Apps Script has an ACCESS_PIN set, but this app does not send a PIN. Remove the ACCESS_PIN script property (Project Settings > Script properties) or tell me and I will add PIN support.";
+ if(/Could not reach/i.test(msg))return "The browser could not load the Apps Script URL. Check the deployment: Execute as 'Me' and Who has access 'Anyone', and that the URL in index.html is the latest /exec URL. Also try without ad-blockers/VPN.";
+ if(/timeout/i.test(msg))return "Google did not answer in time. Apps Script may be busy, over its daily quota, or still finishing a previous request. Wait 1-2 minutes and try again.";
+ if(/not configured/i.test(msg))return "The Apps Script URL in index.html is not configured.";
+ if(/authorization|authoriz|permission|Exception/i.test(msg))return "Apps Script needs authorization or hit an error. Open the script, run setupInventory() once and accept permissions, then redeploy.";
+ return "";
+}
+async function testConnection(){
+ const t0=Date.now();
+ setImportStatus("","Testing connection to Google Sheets…","Sending a small test request. This checks the deployment, access and speed without writing anything.",5,false);
+ const tick=setInterval(()=>{$("importDetail").textContent=`Waiting for Google… ${Math.round((Date.now()-t0)/1000)}s`},1000);
+ try{
+  const res=await jsonp({action:"changes",since:999999999,activitySince:999999999,historySince:999999999},40000);
+  clearInterval(tick);
+  setImportStatus("success","Connection OK",`Google Sheets answered in ${((Date.now()-t0)/1000).toFixed(1)}s. If an import still stalls, press Import again; the problem is then batch size or Apps Script speed, not the connection.`,100,false);
+ }catch(e){
+  clearInterval(tick);
+  const hint=explainServerError(e.message);
+  setImportStatus("warning","Connection test failed",`${String(e.message||e)}${hint?" — "+hint:""}`,0,false);
+ }
+}
+$("testConnBtn").onclick=testConnection;
+// Show how long the current import request has been waiting, so it never looks frozen.
+setInterval(()=>{
+ if(!window.__importState||!isSyncing)return;
+ const secs=Math.round((Date.now()-(window.__reqStart||Date.now()))/1000);
+ if(secs>=5&&window.__reqAction==="import"){const st=window.__importState;$("importDetail").textContent=`Waiting for Google to confirm batch ${st.confirmedBatches+1} of ${st.totalBatches}… ${secs}s (limit 75s, then it retries automatically). If this never moves, press Test connection.`}
+},1000);
 window.setInterval(refreshFromSheets,15000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshFromSheets()});
 async function finishImportCancellation(uncertainBatch=false){
@@ -217,7 +269,6 @@ async function cancelAllSync(){
  // Drop local edits that were never confirmed: refetch the full inventory once.
  isSyncing=false;
  syncCursors=null;localStorage.removeItem("parts_cursors");
- localRecords=[];
  await load();
 }
 $("cancelAllSyncBtn").onclick=cancelAllSync;$("cancelAllSyncBtn2").onclick=cancelAllSync;
@@ -230,7 +281,7 @@ async function syncQueue(){
    let item=queue[0];
    try{
     updateSyncStatus(item.action==="import"?`Uploading import batch ${item.payload?.batchNumber||""} of ${item.payload?.totalBatches||""}…`:`Sending ${syncCompletedCount+1} of ${syncStartedCount} saved changes…`);
-    let response=item.action==="import"?await postApi("import",item.payload):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
+    let response=item.action==="import"?await importWithRetry(item.payload,myEpoch):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
     if(myEpoch!==syncEpoch)break;
     if(response.cursors){syncCursors=response.cursors;saveCursors();receivedCursors=true}
     if(item.action==="import"&&Array.isArray(response.records)){
@@ -293,7 +344,7 @@ async function syncQueue(){
   }else if(!queue.length)toast("All changes synchronized with Google Sheets");
  }
  if(failed&&!wasCancelled){
-  if(window.__importState){const st=window.__importState;const detail=`${st.imported} of ${st.expected} rows confirmed. Failed batch: ${window.__importFailedBatch||"unknown"} of ${st.totalBatches}. ${window.__importLastError||"The server did not confirm this batch."} The failed and later batches remain queued for retry.`;setImportStatus("warning","Import paused — no false success shown",detail,Math.round(20+(st.imported/st.expected)*80),true)}
+  if(window.__importState){const st=window.__importState;const detail=`${st.imported} of ${st.expected} rows confirmed. Failed batch: ${window.__importFailedBatch||"unknown"} of ${st.totalBatches}. ${window.__importLastError||"The server did not confirm this batch."} ${explainServerError(window.__importLastError)} The failed and later batches remain queued for retry.`;setImportStatus("warning","Import paused — no false success shown",detail,Math.round(20+(st.imported/st.expected)*80),true)}
   else updateSyncStatus("A request failed. Your unsent changes remain queued; use Sync now to retry.");
   toast("Some changes are still waiting to sync. Your local cache and pending changes are retained.");
  }
@@ -450,7 +501,7 @@ $('importBtn').onclick=()=>{
   syncEpoch++;queue=[];isSyncing=false;syncPaused=false;persistSyncPaused();
   window.__importState=null;persistImportState();
   saveLocal();updateSyncStatus();
-  syncCursors=null;localStorage.removeItem("parts_cursors");localRecords=[];
+  syncCursors=null;localStorage.removeItem("parts_cursors");
   importPrepReload=load().catch(()=>{});
  }
  $('fileInput').click()
