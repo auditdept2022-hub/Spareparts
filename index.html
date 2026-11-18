@@ -45,6 +45,20 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 /* Compact edit/count popup on mobile */
 @media(max-width:760px){
 .modalback{padding:6px}
+/* HAMBURGER MENU / DRAWER */
+.top .menubtn{position:relative;width:36px;height:36px;padding:0;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
+.top .menubtn svg{width:20px;height:20px}.menudot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#f5b335;border:1.5px solid var(--navy)}
+.drawerback{position:fixed;inset:0;background:#0b1729a8;z-index:70}.drawerback[hidden]{display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,88vw);background:#fff;z-index:71;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-8px 0 30px #0b17292e;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.drawerhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.drawer .toolbar{display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:6px;padding:14px 16px;border:0;border-radius:0;overflow:auto;flex:1}
+.drawer .toolbar select{width:100%;min-width:0;flex:none;padding:10px;font-size:14px}
+.drawer .daterow{display:flex;gap:8px}.drawer .daterow select{flex:1}.drawer .daterow button{flex:none;padding:10px 12px;font-size:13px}
+.drawer .fileactions{display:flex;flex-direction:column;gap:8px;width:100%}.drawer .fileactions button{flex:none;width:100%;padding:11px;font-size:14px}
+.drawerlabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:10px}.drawerlabel:first-child{margin-top:0}
+.drawer .toolbar>.checker-summary{flex:none;order:0;padding:2px 0;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px}
+.tabs button.addbtn{background:var(--blue);color:#fff;margin-left:auto;padding:7px 12px;font-size:13px}
 .exportlist{display:grid;gap:6px;margin-top:10px}.exportopt{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:13px}.exportopt:has(input:checked){border-color:var(--blue);background:#f3f7ff}.exportopt input{width:18px;height:18px;margin:0;flex:none}.exportopt span{flex:1}.exportopt small{color:var(--muted);font-size:11px}.exportopt em{font-style:normal;font-weight:700;color:var(--muted);font-size:12px}.exportnote{font-size:11px;color:var(--muted);margin:10px 2px 0}
 .rownum{color:var(--muted);font-weight:600;font-size:11px;text-align:left;white-space:nowrap;padding-right:6px}th.rownum{width:1%}
 /* LOCK PAGE SCROLL WHILE A POPUP IS OPEN */
@@ -152,7 +166,7 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
 <body>
 <header class="top">
  <div class="brand"><div class="logo"><img src="icon-192.png" alt="Spare Parts logo"></div><div class="brandtext"><h1>Parts Inventory</h1><small>Inventory counting &amp; tracking</small><div class="status mini"><i class="dot" id="netdot2"></i><span id="netlabel2">Checking</span></div></div></div>
- <div class="topright"><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><button type="button" class="bellbtn" id="bellBtn" aria-label="Notifications" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bellbadge" id="bellBadge" hidden>0</span></button><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
+ <div class="topright"><button type="button" class="menubtn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="menudot" id="menuDot" hidden></span></button><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><button type="button" class="bellbtn" id="bellBtn" aria-label="Notifications" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bellbadge" id="bellBadge" hidden>0</span></button><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
  <div class="notifpanel" id="notifPanel" hidden><div class="notifhead"><b>Notifications</b><button type="button" class="ghost" id="notifClose" aria-label="Close">✕</button></div><div class="notifempty" id="notifEmpty">All changes are synced.</div><div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div></div>
 </header>
 <main class="wrap">
@@ -166,15 +180,8 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
  <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
  </div>
  <section class="panel">
-  <div class="toolbar" id="toolbar">
-   <button type="button" class="toolbartoggle" id="toolbarToggle" aria-expanded="false"><span>⚙ Filters &amp; actions <i id="toolbarDot" hidden>●</i></span><b id="toolbarArrow">▾</b></button>
-   <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
-   <select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select><button class="ghost" id="addDateBtn" title="Add a new count date">＋ Date</button><input type="date" id="newDateInput" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
-   <div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><button class="primary" id="addBtn">＋ Add part</button>
-   <div id="checkerSummary" class="checker-summary"></div>
-  </div>
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
-  <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button></div>
+  <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button><button type="button" class="addbtn" id="addBtn">＋ Add part</button></div>
   <div id="inventoryView">
    <div class="tablewrap"><table><thead><tr><th class="rownum">#</th><th class="sortable" data-sort="part"><span class="hl">Part no.</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="desc"><span class="hl">Part description</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="srp"><span class="hl">SRP</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="cost"><span class="hl">Cost</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="end"><span class="hl">End Inv.</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="status"><span class="hl">Status</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="balance"><span class="hl">Balance</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="profile"><span class="hl">Profile</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="location"><span class="hl">Location</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="count"><span class="hl" id="countHead">Count</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="remarks"><span class="hl">Remarks</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th></tr></thead><tbody id="rows"></tbody></table></div>
    <div class="mobilecards" id="cards"></div>
@@ -222,6 +229,20 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
  </div>
  <div class="modalfoot"><button class="secondary" id="exportCancel" type="button">Cancel</button><button class="primary" id="exportGo" type="button">Export CSV</button></div>
 </div></div>
+<div class="drawerback" id="drawerBack" hidden></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Menu">
+ <div class="drawerhead"><b>Menu</b><button type="button" class="ghost" id="drawerClose" aria-label="Close menu">✕</button></div>
+ <div class="toolbar" id="toolbar">
+  <div class="drawerlabel">Show</div>
+  <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
+  <div class="drawerlabel">Count date</div>
+  <div class="daterow"><select id="countDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select><button class="ghost" id="addDateBtn" title="Add a new count date">＋ Date</button></div><input type="date" id="newDateInput" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
+  <div class="drawerlabel">Data</div>
+  <div class="fileactions"><button class="ghost" id="importBtn">Import</button><button class="ghost" id="csvBtn">Export CSV</button><button class="ghost" id="conflictBtn" style="display:none">Review conflicts (0)</button></div><input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
+  <div class="drawerlabel">Progress</div>
+  <div id="checkerSummary" class="checker-summary"></div>
+ </div>
+</aside>
 <div class="toast" id="toast"></div>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz8I3-QNdbkqOgyAnwpd2hc80sxmyaUsEzJnPuqgUKRySj7eBZRe-4I-bzkvofnJ70Z8w/exec";
@@ -835,11 +856,11 @@ $("addDateBtn").onclick=()=>{
  addCountDate(+m[1]+"/"+ +m[2]+"/"+String(m[3]).slice(-2))
 };
 $("newDateInput").onchange=e=>{const v=e.target.value;if(!v)return;const [y,mo,da]=v.split("-").map(Number);if(y<2000||y>2099){toast("Choose a date from 2000 to 2099");return}addCountDate(mo+"/"+da+"/"+String(y).slice(2))};
-function toolbarHidden(){try{const v=localStorage.getItem("parts_toolbar_hidden");return v===null?true:v==="1"}catch(e){return true}}
-function applyToolbarState(){const hid=toolbarHidden();$("toolbar").classList.toggle("collapsed",hid);$("toolbarToggle").setAttribute("aria-expanded",String(!hid));$("toolbarArrow").textContent=hid?"▾":"▴"}
-function updateToolbarToggle(){const dot=$("toolbarDot");if(!dot)return;const active=($("filter")?.value||"all")!=="all";dot.hidden=!active}
-$("toolbarToggle").onclick=()=>{try{localStorage.setItem("parts_toolbar_hidden",toolbarHidden()?"0":"1")}catch(e){}applyToolbarState()};
-applyToolbarState();
+function setDrawer(open){$("drawer").classList.toggle("open",open);$("drawer").setAttribute("aria-hidden",String(!open));$("drawerBack").hidden=!open;$("menuBtn").setAttribute("aria-expanded",String(open));document.documentElement.style.overflow=open?"hidden":""}
+function updateToolbarToggle(){const dot=$("menuDot");if(!dot)return;dot.hidden=($("filter")?.value||"all")==="all"}
+$("menuBtn").onclick=()=>setDrawer(!$("drawer").classList.contains("open"));$("drawerClose").onclick=$("drawerBack").onclick=()=>setDrawer(false);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("drawer").classList.contains("open")&&!$("exportModal").classList.contains("show"))setDrawer(false)});
+["csvBtn","importBtn","addDateBtn","conflictBtn"].forEach(id=>$(id).addEventListener("click",()=>setDrawer(false)));
 const SORT_COLS={part:"Part no.",desc:"Part description",srp:"SRP",cost:"Cost",end:"End Inv.",status:"Status",balance:"Balance",profile:"Profile",location:"Location",count:"Count",remarks:"Remarks"};
 const NUM_SORT={srp:1,cost:1,end:1,balance:1,count:1};
 let sortKey="",sortDir="asc";
