@@ -344,12 +344,27 @@ input.locked,input[readonly].locked{background:#f1f4fa!important;color:#5b6b82;c
 select.locked{background:#f1f4fa!important;color:#5b6b82;cursor:not-allowed;border-style:dashed;-webkit-appearance:none;appearance:none}
 input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
 </style>
+<style id="detailpopups">
+#noticeModal{z-index:40}
+.rvhelp{font-size:12.5px;font-weight:650;margin:8px 0 0;padding:8px 10px;border-radius:9px;background:#fff7e6;border:1px solid #f5d9a0;color:#5a3d00}
+.rvitem.solved .rvhelp,.rvitem.info .rvhelp{background:#eef5ff;border-color:#c9d9f5;color:#173a7a}
+.nsec{padding:8px 12px 2px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.nitem{display:block;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--line);padding:9px 12px;border-radius:0;color:var(--text)}
+.nitem:active{background:#f1f5fc}
+.nitem .nt{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700;word-break:break-word}
+.nitem .ns{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:normal}
+.nitem .nmore{margin-left:auto;color:#2a5bd7;font-size:11px;font-weight:700;flex:none}
+.nstatic{padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}
+.nstatic small{display:block;color:var(--muted);font-size:11.5px}
+.draftfields{margin-top:6px}
+.draftfields .rvtable{margin-top:4px}
+</style>
 </head>
 <body>
 <header class="top">
  <div class="brand"><button type="button" class="menubtn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="menudot" id="menuDot" hidden></span></button><div class="logo"><img src="icon-192.png" alt="Spare Parts logo"></div><div class="brandtext"><h1>Parts Inventory</h1><small>Inventory counting &amp; tracking</small><div class="status mini"><i class="dot" id="netdot2"></i><span id="netlabel2">Checking</span></div></div></div>
  <div class="topright"><div class="status"><i class="dot" id="netdot"></i><span id="netlabel">Checking connection</span></div><button type="button" class="bellbtn" id="bellBtn" aria-label="Notifications" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="bellbadge" id="bellBadge" hidden>0</span></button><select id="profile" aria-label="Active profile"><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
- <div class="notifpanel" id="notifPanel" hidden><div class="notifhead"><b>Notifications</b><button type="button" class="ghost" id="notifClose" aria-label="Close">✕</button></div><div class="notifempty" id="notifEmpty">All changes are synced.</div><div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div><div class="notifreview"><button type="button" class="primary" id="notifReviewBtn">Review <span id="notifReviewCount"></span></button><button type="button" class="ghost" id="notifRefreshBtn">⟳ Refresh</button></div></div>
+ <div class="notifpanel" id="notifPanel" hidden><div class="notifhead"><b>Notifications</b><button type="button" class="ghost" id="notifClose" aria-label="Close">✕</button></div><div class="notifempty" id="notifEmpty">All changes are synced.</div><div id="syncStatus" class="sync-status" style="display:none"><div class="sync-status-head"><span id="syncTitle">Changes waiting to sync</span><div class="sync-actions"><button class="ghost" id="syncControlBtn">Pause sync</button><button class="ghost" id="syncNowBtn">Sync now</button><button class="danger" id="cancelAllSyncBtn">Cancel all sync</button></div></div><div class="sync-status-detail" id="syncDetail"></div></div><div id="notifList"></div><div class="notifreview"><button type="button" class="primary" id="notifReviewBtn">Review <span id="notifReviewCount"></span></button><button type="button" class="ghost" id="notifRefreshBtn">⟳ Refresh</button></div></div>
 </header>
 <main class="wrap">
  <div class="stickyarea" id="stickyArea">
@@ -365,7 +380,7 @@ input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
 <div class="conflictbar" id="conflictBar" hidden><span id="conflictBarText"></span><button type="button" id="conflictBarBtn">Review</button></div>
  <section class="panel">
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
-  <div class="tabs" style="padding:7px 12px 0"><button class="active" data-tab="inventory">Inventory</button><button data-tab="activity">Activity history</button><button type="button" class="addbtn" id="addBtn">＋ Add part</button></div>
+  <div class="tabs" style="padding:7px 12px 0"><button type="button" id="tabActivityBtn">Activity history</button><button type="button" class="addbtn" id="addBtn">＋ Add part</button></div>
   <div id="inventoryView">
    <div class="tablewrap"><table><thead><tr><th class="rownum">#</th><th class="sortable" data-sort="part"><span class="hl">Part no.</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="desc"><span class="hl">Part description</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="srp"><span class="hl">SRP</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="cost"><span class="hl">Cost</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="end"><span class="hl">End Inv.</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="status"><span class="hl">Status</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="balance"><span class="hl">Balance</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="profile"><span class="hl">Profile</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="location"><span class="hl">Location</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th><th class="sortable" data-sort="remarks"><span class="hl">Remarks</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span></th></tr></thead><tbody id="rows"></tbody></table></div>
    <div class="mobilecards" id="cards"></div>
@@ -376,7 +391,7 @@ input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
 </main>
 <div class="modalback" id="activityModal"><div class="modal" role="dialog" aria-modal="true" aria-label="Activity history" style="width:min(720px,100%)">
  <div class="modalhead"><h2>Activity history</h2><button class="ghost" id="activityClose" type="button" aria-label="Close">✕</button></div>
- <div class="modalbody" style="padding-top:4px"><div class="history" id="history"><div class="empty">No activity loaded.</div></div></div>
+ <div class="modalbody" style="padding-top:4px"><div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px"><input id="activitySearch" type="search" placeholder="Search part, user, action, details…" autocomplete="off" style="flex:1 1 200px;min-width:0"><select id="activityType" style="flex:0 0 auto"><option value="">All actions</option></select></div><div class="rvmeta" id="activityCount" style="margin:0 0 6px"></div><div class="history" id="history"><div class="empty">No activity loaded.</div></div></div>
 </div></div>
 <div class="modalback" id="editModal"><div class="modal">
  <div class="modalhead"><h2 id="modalTitle">Add part</h2><button class="ghost" id="closeModal">✕</button></div>
@@ -434,7 +449,7 @@ input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
 <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Menu">
  <div class="drawerhead"><b>Menu</b><button type="button" class="ghost" id="drawerClose" aria-label="Close menu">✕</button></div>
  <div class="toolbar" id="toolbar">
-  <div class="fileactions"><button type="button" class="primary" id="menuAddBtn">＋ Add part</button><button type="button" class="ghost navbtn active" data-tab="inventory">Inventory</button><button type="button" class="ghost navbtn" id="menuActivityBtn">Activity history</button></div>
+  <div class="fileactions"><button type="button" class="primary" id="menuAddBtn">＋ Add part</button><button type="button" class="ghost navbtn" id="menuActivityBtn">Activity history</button></div>
   <div class="drawerlabel">Show</div>
   <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
   <div class="drawerlabel">Count date</div>
@@ -459,6 +474,11 @@ input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
   <div class="rvtools" id="reviewTools"><button type="button" data-f="all">All</button><button type="button" data-f="open">Needs action</button><button type="button" data-f="solved">Solved</button><button type="button" data-f="info">Info</button><span style="flex:1"></span><button type="button" class="ghost" id="reviewClearSolved">Clear solved</button><button type="button" class="danger" id="reviewClearAll">Clear all</button></div>
   <div id="reviewList"></div>
  </div>
+</div></div>
+<div class="modalback" id="noticeModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="noticeTitle" style="width:min(640px,100%)">
+ <div class="modalhead"><h2 id="noticeTitle">Notification details</h2><button class="ghost" id="noticeClose" type="button" aria-label="Close">✕</button></div>
+ <div class="modalbody" id="noticeBody"></div>
+ <div class="modalfoot"><button class="ghost" id="noticeAll" type="button">Open full review</button><button class="primary" id="noticeOk" type="button">Close</button></div>
 </div></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -644,7 +664,7 @@ async function refreshFromSheets(){
    const res=await jsonp({action:"changes",since:syncCursors.changes||0,activitySince:syncCursors.activity||0,historySince:syncCursors.history||0});
    if(res.resetRequired||(res.epoch!==undefined&&String(res.epoch)!==dataEpoch)){syncCursors=null;localStorage.removeItem("parts_cursors");records=[];localRecords=[];await load();return}
    if(res.dates&&setCountDates(res.dates))anyChanged=true;(res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
-   if(res.activity?.length){activity=[...res.activity.reverse(),...activity].slice(0,150);anyChanged=true}
+   if(res.activity?.length){activity=[...res.activity.reverse(),...activity].slice(0,3000);anyChanged=true}
    if(res.countHistory?.length){countHistory=[...res.countHistory.reverse(),...countHistory].slice(0,500);anyChanged=true}
    syncCursors=res.cursors||syncCursors;saveCursors();
    more=!!res.more;
@@ -751,6 +771,7 @@ function updateBell(){
  btn.setAttribute("aria-label",tot?`${n} change(s) waiting to sync, ${rc} to review`:"Notifications");
  const e=$("notifEmpty");e.style.display=showing?"none":"block";
  e.textContent=n?"An import is in progress. See the Import panel for details.":(netOnline()?"All changes are synced. No notifications.":"You are offline. New changes are saved on this device and sync when the connection returns.");
+ try{renderNotifList()}catch(err){}
 }
 (function(){
  const b=$("bellBtn"),p=$("notifPanel");
@@ -761,16 +782,17 @@ function updateBell(){
  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!p.hidden&&!$("confirmBack").classList.contains("show"))setOpen(false)});
 })();
 /* ARE-YOU-SURE DIALOG (not dismissed by tapping outside; the Yes button unlocks after a short delay so a double tap cannot confirm by accident) */
-function askConfirm({title,body,yes,no,delay=800}){
+function askInfo(title,body){return askConfirm({title,body,yes:"OK",no:"",delay:150,single:true})}
+function askConfirm({title,body,yes,no,delay=800,single=false}){
  return new Promise(resolve=>{
   const back=$("confirmBack"),y=$("confirmYes"),n=$("confirmNo");
-  $("confirmTitle").textContent=title;$("confirmBody").textContent=body;y.textContent=yes;n.textContent=no;
+  $("confirmTitle").textContent=title;$("confirmBody").textContent=body;y.textContent=yes;n.textContent=no;n.style.display=single?"none":"";y.className=single?"primary":"danger";
   y.disabled=true;setTimeout(()=>{y.disabled=false},delay);
   function done(v){back.classList.remove("show");y.onclick=n.onclick=null;document.removeEventListener("keydown",key,true);resolve(v)}
   function key(e){if(e.key==="Escape"){e.preventDefault();done(false)}}
   y.onclick=()=>{if(!y.disabled)done(true)};n.onclick=()=>done(false);
   document.addEventListener("keydown",key,true);
-  back.classList.add("show");setTimeout(()=>n.focus(),0);
+  back.classList.add("show");setTimeout(()=>(single?y:n).focus(),single?200:0);
  });
 }
 async function cancelAllSync(){
@@ -831,7 +853,7 @@ async function syncQueue(){
      persistImportState();
     }
     // Chain same-device saves using the version returned by the server.
-    if(item.action==="save"&&response.skipped&&response.skipped.length){const nm=f=>f==="Part Description"?"Description":/^Count \(/.test(f)?"Count "+dateLabel(f.slice(7,-1)):f;addNotice({type:"partial",by:String(item.payload["Updated By"]||activeProfile),recId:item.payload.id,part:item.payload["Part no."]||"",loc:item.payload.Location||"",lines:["Your other changes were saved. These fields were changed by someone else first, so their values were kept and yours were NOT applied. Check them and save again if yours is the right one."],fields:response.skipped.map(s=>({k:s.field,yours:s.yours,theirs:s.theirs}))});const txt=response.skipped.map(s=>`• ${nm(s.field)}: your ${s.yours===""?"blank":s.yours}, theirs ${s.theirs===""?"blank":s.theirs}`).join("\n");setTimeout(()=>alert(`✔ Saved your other changes.\n\n⚠ NOT saved, because someone else changed these first (their values were kept):\n${txt}\n\nCheck them and save again if yours is the right one.`),50)}
+    if(item.action==="save"&&response.skipped&&response.skipped.length){const nm=f=>f==="Part Description"?"Description":/^Count \(/.test(f)?"Count "+dateLabel(f.slice(7,-1)):f;addNotice({type:"partial",by:String(item.payload["Updated By"]||activeProfile),recId:item.payload.id,part:item.payload["Part no."]||"",loc:item.payload.Location||"",lines:["Your other changes were saved. These fields were changed by someone else first, so their values were kept and yours were NOT applied. Check them and save again if yours is the right one."],fields:response.skipped.map(s=>({k:s.field,yours:s.yours,theirs:s.theirs}))});const txt=response.skipped.map(s=>`• ${nm(s.field)}: your ${s.yours===""?"blank":s.yours}, theirs ${s.theirs===""?"blank":s.theirs}`).join("\n");}
     if(item.action==="save"&&response.mergedOver&&response.mergedOver.by){window.__mergedNotice=response.mergedOver;addNotice({type:"merged",by:String(item.payload["Updated By"]||activeProfile),recId:item.payload.id,part:item.payload["Part no."]||"",loc:item.payload.Location||"",lines:[`${response.mergedOver.by} changed this part at the same time${response.mergedOver.at?" ("+fmtDateTime(response.mergedOver.at)+")":""}. Your changes were added on top and theirs were kept. Nothing was overwritten.`]});setTimeout(()=>toast(`ℹ ${response.mergedOver.by} changed this part at the same time. Your changes were added on top, theirs were kept.`),50)}
     if(item.action==="save"&&response.version!==undefined){
      const savedId=String(response.id||item.payload.id||"");
@@ -994,10 +1016,20 @@ function removeDraftsFor(recordId,partNo,location){
  if(keep.length!==all.length)writeFormDrafts(keep)}
 function applyFormSnapshot(sn){FORM_IDS.forEach(id=>{if(sn.fields[id]!==undefined)$(id).value=sn.fields[id]});countDrafts=sn.dates||{};clearCountRequested=!!sn.clear;modalDate=$("fDate").value;updateCountContext()}
 function updateDraftUI(){const n=myDrafts().length,bar=$("draftBar");if(!bar)return;bar.hidden=!n;$("draftBarText").textContent=n===1?"You have 1 unsaved draft.":`You have ${n} unsaved drafts.`;const d=$("discardDraftBtn");if(d)d.style.display=modalDraftKey&&readFormDrafts().some(x=>x.key===modalDraftKey)?"inline-block":"none"}
+const DRAFT_FIELDS=[["fPart","Part no.","Part no."],["fDesc","Description","Part Description"],["fSrp","SRP","SRP"],["fCost","Cost","Cost"],["fEnd","End Inv.","End Inv."],["fLocation","Location","Location"],["fRemarks","Remarks","Remarks"]];
+function draftDetailHTML(d){
+ const rec=d.recordId?records.find(r=>String(r.id)===String(d.recordId)):null,f=(d.snap&&d.snap.fields)||{},rows=[];
+ DRAFT_FIELDS.forEach(([id,label,key])=>{const typed=f[id]??"",saved=rec?(rec[key]??""):"";if(String(typed)!==String(saved))rows.push([label,typed,rec?saved:undefined])});
+ Object.entries((d.snap&&d.snap.dates)||{}).forEach(([k,v])=>{if(!v)return;const saved=rec?(rec[k]??""):"";const typed=v.clear?"(clear count)":v.v;if(String(typed)!==String(saved))rows.push([fieldLabel(k),typed,rec?saved:undefined])});
+ if(!rows.length)return '<div class="rvmeta" style="margin-top:6px">No difference from the saved record.</div>';
+ const hasSaved=rows.some(r=>r[2]!==undefined);
+ return '<div class="draftfields rvtablewrap"><table class="rvtable"><thead><tr><th>Field</th><th>Your draft</th>'+(hasSaved?'<th>Saved now</th>':'')+'</tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+showVal(r[1])+'</td>'+(hasSaved?'<td>'+showVal(r[2])+'</td>':'')+'</tr>').join("")+'</tbody></table></div>';
+}
 function openDrafts(){const list=myDrafts();if(!list.length){$("draftsModal").classList.remove("show");return}
- $("draftsList").innerHTML=list.map(d=>`<div class="draftitem"><div><b>${esc(d.title)}</b><br><small>${d.recordId?"Editing existing part":"New part"} · ${esc(d.by||"")} · ${esc(fmtDateTime(d.savedAt))}</small></div><div class="draftbtns"><button type="button" class="primary" data-resume="${esc(d.key)}">Resume</button><button type="button" class="ghost" data-del="${esc(d.key)}">Discard</button></div></div>`).join("");
- $("draftsList").querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>{const d=readFormDrafts().find(x=>x.key===b.dataset.resume);if(!d)return;$("draftsModal").classList.remove("show");const rec=d.recordId?records.find(r=>String(r.id)===String(d.recordId)):null;if(d.recordId&&!rec){alert("That part is no longer in the list. The draft is kept so you can copy it.");return}openModal(rec,d)});
- $("draftsList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Discard this draft?")){removeFormDraft(b.dataset.del);openDrafts()}});
+ $("draftsList").innerHTML=list.map(d=>`<div class="draftitem" style="flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:0"><b>${esc(d.title)}</b><br><small>${d.recordId?"Editing existing part":"New part"} · ${esc(d.by||"")} · ${esc(fmtDateTime(d.savedAt))}</small>${draftDetailHTML(d)}</div><div class="draftbtns"><button type="button" class="primary" data-resume="${esc(d.key)}">Resume</button><button type="button" class="ghost" data-del="${esc(d.key)}">Discard</button></div></div>`).join("");
+ 
+$("draftsList").querySelectorAll("[data-resume]").forEach(b=>b.onclick=async()=>{try{const d=readFormDrafts().find(x=>x.key===b.dataset.resume);if(!d)return;const rec=d.recordId?records.find(r=>String(r.id)===String(d.recordId)):null;if(d.recordId&&!rec){await askInfo("Part not found","That part is no longer in the list. The draft is kept so you can copy what you typed.");return}$("draftsModal").classList.remove("show");openModal(rec,d)}catch(err){toast("Could not open the draft: "+(err&&err.message||err))}});
+ $("draftsList").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(await askConfirm({title:"Discard this draft?",body:"What you typed in this draft will be lost.",yes:"Yes, discard",no:"Keep it"})){removeFormDraft(b.dataset.del);openDrafts()}});
  $("draftsModal").classList.add("show")}
 
 // ---- Someone else changed this part while your form is open ----
@@ -1043,7 +1075,7 @@ window.quickCount=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.
 let reviewFilter="all";
 const NOTICE_LABEL={conflict:"Edit not saved",partial:"Saved partly",merged:"Merged",blocked:"Save blocked"};
 function saveNotices(){notices=notices.slice(0,200);try{localStorage.setItem("parts_notices",JSON.stringify(notices))}catch(e){}updateReviewBadges()}
-function addNotice(n){notices.unshift({id:"n"+Date.now()+"_"+Math.floor(Math.random()*1e6),at:new Date().toISOString(),by:activeProfile,seen:false,...n});saveNotices()}
+function addNotice(n){const rec={id:"n"+Date.now()+"_"+Math.floor(Math.random()*1e6),at:new Date().toISOString(),by:activeProfile,seen:false,...n};notices.unshift(rec);saveNotices();if(String(rec.by||"")===activeProfile)setTimeout(()=>{try{showNoticeDetail(rec.id,true)}catch(e){}},400)}
 function fieldLabel(k){return k==="Part Description"?"Description":/^Count \(/.test(k)?"Count "+dateLabel(k.slice(7,-1)):k}
 function changedFieldsOf(p){const base=p.baseSnapshot||{},out=[],has=k=>Object.prototype.hasOwnProperty.call(p,k);["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(has(k)&&String(p[k]??"")!==String(base[k]??""))out.push({k,yours:p[k],base:base[k]??""})});const dt=p.countDate;if(dt){if(p.clearCount)out.push({k:dt,yours:"(clear count)",base:base[dt]??""});else if(has(dt)&&String(p[dt])!==String(base[dt]??""))out.push({k:dt,yours:p[dt],base:base[dt]??""})}return out}
 function conflictNoticeFrom(d){const p=d.payload||{};return{id:"c"+d.id,at:d.createdAt||new Date().toISOString(),by:String(p["Updated By"]||activeProfile),seen:false,type:"conflict",conflictId:d.id,recId:p.id,part:p["Part no."]||"",loc:p.Location||"",reason:String(d.reason||"").replace(/^.*?CONFLICT:\s*/,""),fields:changedFieldsOf(p)}}
@@ -1055,33 +1087,89 @@ function updateReviewBadges(){const c=reviewBadgeCount(),t=c?"("+c+")":"";["revi
 function latestFor(n){return records.find(r=>String(r.id)===String(n.recId))||(n.part?records.find(r=>recordKey(r)===recordKey({"Part no.":n.part,Location:n.loc})):null)}
 function reviewIsOpen(){return $("reviewModal").classList.contains("show")}
 function showVal(v){return v===""||v===null||v===undefined?"<i>blank</i>":esc(String(v))}
-function renderReview(){
- const list=myNotices(),shown=list.filter(n=>reviewFilter==="all"||noticeStatus(n)===reviewFilter);
- $("reviewTools").querySelectorAll("[data-f]").forEach(b=>{const f=b.dataset.f,c=f==="all"?list.length:list.filter(n=>noticeStatus(n)===f).length;b.textContent=({all:"All",open:"Needs action",solved:"Solved",info:"Info"})[f]+" ("+c+")";b.classList.toggle("on",f===reviewFilter)});
- $("reviewClearSolved").disabled=!list.some(n=>noticeStatus(n)==="solved");$("reviewClearAll").disabled=!list.length;
- if(!shown.length){$("reviewList").innerHTML='<div class="rvempty">'+(list.length?"Nothing in this view.":"Nothing to review. Everything is saved.")+'</div>';return}
- $("reviewList").innerHTML=shown.map(n=>{
+const NOTICE_HELP={conflict:"What happened: someone else changed the same part or field before your edit reached Google Sheets, so YOUR edit was NOT saved. Their values were kept. Press Review & save again to reopen the latest version with your changes filled in.",partial:"What happened: most of your edit was saved, but some fields were changed by someone else first. Their values were kept for those fields and yours were NOT applied. Check them and save again if yours is the right one.",merged:"What happened: another person changed this part at the same time. Your changes were added on top and theirs were kept. Nothing was overwritten. No action is needed.",blocked:"What happened: this save was blocked and nothing was written. Check the reason below, then try again."};
+function noticeCard(n){
   const st=noticeStatus(n),latest=latestFor(n),fields=n.fields||[],hasBase=fields.some(f=>f.base!==undefined),hasTheirs=fields.some(f=>f.theirs!==undefined);
   let by="",lat="";try{if(latest){const d=new Date(latest["Updated At"]);lat=`Sheet now: last changed by <b>${esc(latest["Updated By"]||"unknown")}</b>${isNaN(d)?"":" at "+esc(fmtDateTime(d.toISOString()))}, version ${esc(latest.Version||0)}.`}else if(n.part)lat="This part is no longer on the sheet."}catch(e){}
   const table=fields.length?`<div class="rvtablewrap"><table class="rvtable"><thead><tr><th>Field</th><th>You tried</th>${hasBase?"<th>You opened with</th>":""}${hasTheirs?"<th>Theirs at that time</th>":""}${latest?"<th>Sheet now</th>":""}</tr></thead><tbody>${fields.map(f=>`<tr><td>${esc(fieldLabel(f.k))}</td><td>${showVal(f.yours)}</td>${hasBase?`<td>${showVal(f.base)}</td>`:""}${hasTheirs?`<td>${showVal(f.theirs)}</td>`:""}${latest?`<td>${showVal(latest[f.k])}</td>`:""}</tr>`).join("")}</tbody></table></div>`:"";
   const lines=(n.lines||[]).map(x=>esc(x)).join("\n");
   const btns=st==="open"?`<button type="button" class="primary" data-a="resolve" data-id="${esc(n.id)}">Review &amp; save again</button><button type="button" class="ghost" data-a="discard" data-id="${esc(n.id)}">Discard my entry</button>`:`<button type="button" class="ghost" data-a="remove" data-id="${esc(n.id)}">Remove</button>`;
-  return `<div class="rvitem ${st}"><div class="rvhead"><div><div class="rvtitle"><span class="rvbadge ${st}">${st==="open"?"Needs action":st==="solved"?"Solved":"Info"}</span>${esc(NOTICE_LABEL[n.type]||"Notice")}: ${esc(n.part||"(part)")}${n.loc?" · "+esc(n.loc):""}</div><div class="rvmeta">${esc(fmtDateTime(n.at))} · profile ${esc(n.by||"")}</div></div></div>${n.reason?`<div class="rvreason">${esc(n.reason)}</div>`:""}${lines?`<div class="rvreason">${lines}</div>`:""}${table}${lat?`<div class="rvmeta" style="margin-top:6px">${lat}</div>`:""}${st==="solved"?'<div class="rvmeta" style="margin-top:6px">Your entry is no longer waiting: it was saved again or discarded.</div>':""}<div class="rvbtns">${btns}</div></div>`}).join("")}
+  return `<div class="rvitem ${st}"><div class="rvhead"><div><div class="rvtitle"><span class="rvbadge ${st}">${st==="open"?"Needs action":st==="solved"?"Solved":"Info"}</span>${esc(NOTICE_LABEL[n.type]||"Notice")}: ${esc(n.part||"(part)")}${n.loc?" · "+esc(n.loc):""}</div><div class="rvmeta">${esc(fmtDateTime(n.at))} · profile ${esc(n.by||"")}</div></div></div>${NOTICE_HELP[n.type]?`<div class="rvhelp">${esc(NOTICE_HELP[n.type])}</div>`:""}${n.reason?`<div class="rvreason"><b>Reason:</b> ${esc(n.reason)}</div>`:""}${lines?`<div class="rvreason">${lines}</div>`:""}${table}${lat?`<div class="rvmeta" style="margin-top:6px">${lat}</div>`:""}${st==="solved"?'<div class="rvmeta" style="margin-top:6px">Your entry is no longer waiting: it was saved again or discarded.</div>':""}<div class="rvbtns">${btns}</div></div>`}
+function renderReview(){
+ const list=myNotices(),shown=list.filter(n=>reviewFilter==="all"||noticeStatus(n)===reviewFilter);
+ $("reviewTools").querySelectorAll("[data-f]").forEach(b=>{const f=b.dataset.f,c=f==="all"?list.length:list.filter(n=>noticeStatus(n)===f).length;b.textContent=({all:"All",open:"Needs action",solved:"Solved",info:"Info"})[f]+" ("+c+")";b.classList.toggle("on",f===reviewFilter)});
+ $("reviewClearSolved").disabled=!list.some(n=>noticeStatus(n)==="solved");$("reviewClearAll").disabled=!list.length;
+ if(!shown.length){$("reviewList").innerHTML='<div class="rvempty">'+(list.length?"Nothing in this view.":"Nothing to review. Everything is saved.")+'</div>';return}
+ $("reviewList").innerHTML=shown.map(noticeCard).join("")}
 function openReview(){notices.forEach(n=>{if(String(n.by||"")===activeProfile&&n.type!=="conflict")n.seen=true});saveNotices();renderReview();$("reviewModal").classList.add("show")}
 function closeReview(){$("reviewModal").classList.remove("show")}
 function dropConflict(id){conflictDrafts=conflictDrafts.filter(d=>d.id!==id);saveLocal();updateConflictUI()}
 $("reviewClose").onclick=closeReview;
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&reviewIsOpen()&&!$("confirmBack").classList.contains("show")&&!$("editModal").classList.contains("show")){e.preventDefault();closeReview()}});
 $("reviewTools").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){reviewFilter=b.dataset.f;renderReview()}});
-$("reviewList").addEventListener("click",async e=>{
+async function handleNoticeClick(e){
  const b=e.target.closest("[data-a]");if(!b)return;const n=notices.find(x=>x.id===b.dataset.id);if(!n)return;const a=b.dataset.a;
- if(a==="resolve"){closeReview();reviewConflicts(n.conflictId);return}
- if(a==="discard"){if(!confirm("Discard your entry for "+(n.part||"this part")+"?\n\nWhat you tried to save will be thrown away. The sheet keeps the other person's values."))return;dropConflict(n.conflictId);renderReview();toast("Entry discarded");return}
- if(a==="remove"){notices=notices.filter(x=>x.id!==n.id);saveNotices();renderReview()}
-});
+ if(a==="resolve"){closeReview();closeNoticeModal();reviewConflicts(n.conflictId);return}
+ if(a==="discard"){if(!await askConfirm({title:"Discard your entry?",body:"Discard your entry for "+(n.part||"this part")+"?\n\nWhat you tried to save will be thrown away. The sheet keeps the other person's values.",yes:"Yes, discard",no:"Keep it"}))return;dropConflict(n.conflictId);renderReview();renderNoticeModal();toast("Entry discarded");return}
+ if(a==="remove"){notices=notices.filter(x=>x.id!==n.id);saveNotices();renderReview();renderNoticeModal()}
+}
+$("reviewList").addEventListener("click",handleNoticeClick);$("noticeBody").addEventListener("click",handleNoticeClick);
 $("reviewClearSolved").onclick=()=>{const gone=myNotices().filter(n=>noticeStatus(n)==="solved").map(n=>n.id);if(!gone.length)return;notices=notices.filter(n=>!gone.includes(n.id));saveNotices();renderReview();toast(gone.length+" solved item(s) cleared")};
 $("reviewClearAll").onclick=()=>{const mine=myNotices();if(!mine.length)return;const open=mine.filter(n=>noticeStatus(n)==="open").length;if(!confirm(`Clear all ${mine.length} item(s) for ${activeProfile}?`+(open?`\n\n${open} of them still need action. Their saved entries will be DISCARDED and cannot be recovered.`:"\n\nNone of them need action."))) return;mine.forEach(n=>{if(n.type==="conflict")dropConflict(n.conflictId)});const ids=mine.map(n=>n.id);notices=notices.filter(n=>!ids.includes(n.id));saveNotices();renderReview();toast("Review cleared")};
 {const _u=updateConflictUI;updateConflictUI=function(){const r=_u.apply(this,arguments);try{updateReviewBadges();if(reviewIsOpen())renderReview()}catch(e){}return r}}
+
+
+/* ---- NOTICE POPUP (detailed card for one notification) + detailed bell list ---- */
+let noticeCurrent=null;
+function noticeModalOpen(){return $("noticeModal").classList.contains("show")}
+function closeNoticeModal(){$("noticeModal").classList.remove("show");noticeCurrent=null}
+function renderNoticeModal(){
+ if(!noticeModalOpen())return;
+ const n=notices.find(x=>x.id===noticeCurrent);
+ if(!n){closeNoticeModal();return}
+ $("noticeTitle").textContent=NOTICE_LABEL[n.type]||"Notification";
+ $("noticeBody").innerHTML=noticeCard(n);
+}
+function showNoticeDetail(id,auto){
+ const n=notices.find(x=>x.id===id);if(!n)return;
+ if(auto&&(noticeModalOpen()||$("editModal").classList.contains("show")||reviewIsOpen()))return;
+ noticeCurrent=id;
+ if(n.type!=="conflict"){n.seen=true;saveNotices()}
+ renderNoticeModal();$("noticeModal").classList.add("show");
+}
+$("noticeClose").onclick=$("noticeOk").onclick=closeNoticeModal;
+$("noticeAll").onclick=()=>{closeNoticeModal();openReview()};
+$("noticeModal").addEventListener("click",e=>{if(e.target===$("noticeModal"))closeNoticeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&noticeModalOpen()&&!$("confirmBack").classList.contains("show")){e.preventDefault();closeNoticeModal()}});
+function queueLabel(it){
+ const p=it.payload||{};
+ if(it.action==="import")return{t:"Import batch "+(p.batchNumber||"?")+" of "+(p.totalBatches||"?"),s:(p.records?p.records.length:0)+" row(s) · file "+(p.fileName||"")};
+ if(it.action==="delete")return{t:"Delete "+String(p.id||"").replace(/\u001f/g," · "),s:"Waiting to be sent"};
+ if(it.action==="adddate")return{t:"Add count date",s:String(p.date||"")};
+ const f=changedFieldsOf(p).map(x=>fieldLabel(x.k)+": "+(x.yours===""||x.yours==null?"blank":x.yours)).join(", ");
+ return{t:"Save "+(p["Part no."]||"part")+(p.Location?" · "+p.Location:""),s:f||"Waiting to be sent"};
+}
+function renderNotifList(){
+ const box=$("notifList");if(!box)return;
+ const mine=myNotices().slice(0,8),drafts=myDrafts(),q=queue.slice(0,6);
+ let html="";
+ if(mine.length){
+  html+='<div class="nsec">Needs your attention ('+reviewBadgeCount()+')</div>'+mine.map(n=>{
+   const st=noticeStatus(n),fl=(n.fields||[]).slice(0,3).map(f=>fieldLabel(f.k)).join(", ");
+   const sum=(n.reason||(n.lines&&n.lines[0])||"").toString().slice(0,110);
+   return '<button type="button" class="nitem" data-nid="'+esc(n.id)+'"><div class="nt"><span class="rvbadge '+st+'">'+(st==="open"?"Action":st==="solved"?"Solved":"Info")+'</span>'+esc(NOTICE_LABEL[n.type]||"Notice")+': '+esc(n.part||"(part)")+(n.loc?' · '+esc(n.loc):'')+'<span class="nmore">Details ›</span></div><div class="ns">'+esc(fmtDateTime(n.at))+(fl?' · '+esc(fl):'')+(sum?'<br>'+esc(sum):'')+'</div></button>'}).join("");
+ }
+ if(drafts.length)html+='<div class="nsec">Unsaved drafts ('+drafts.length+')</div><button type="button" class="nitem" data-drafts="1"><div class="nt">'+drafts.slice(0,3).map(d=>esc(d.title)).join(", ")+(drafts.length>3?" …":"")+'<span class="nmore">Open ›</span></div><div class="ns">Kept on this device until you save or discard them.</div></button>';
+ if(q.length)html+='<div class="nsec">Waiting to sync ('+queue.length+')</div>'+q.map(it=>{const l=queueLabel(it);return '<div class="nstatic"><b>'+esc(l.t)+'</b><small>'+esc(l.s)+'</small></div>'}).join("")+(queue.length>q.length?'<div class="nstatic"><small>+ '+(queue.length-q.length)+' more</small></div>':'');
+ box.innerHTML=html;
+ const e=$("notifEmpty");if(e&&html)e.style.display="none";
+}
+document.addEventListener("click",e=>{
+ const b=e.target.closest&&e.target.closest("#notifList [data-nid],#notifList [data-drafts]");if(!b)return;
+ const nc=$("notifClose");if(nc)nc.click();
+ if(b.dataset.drafts){openDrafts();return}
+ showNoticeDetail(b.dataset.nid,false);
+});
 
 /* ---- REFRESH DASHBOARD (side menu + notification panel) ---- */
 let refreshingNow=false;
@@ -1104,8 +1192,8 @@ $("reviewBtn").onclick=()=>{setDrawer(false);openReview()};
 $("notifRefreshBtn").onclick=()=>refreshDashboard(false);
 $("notifReviewBtn").onclick=()=>{$("notifClose").click();openReview()};
 updateReviewBadges();
-async function reviewConflicts(cid){cid=typeof cid==="string"?cid:null;if(!conflictDrafts.length){toast("No conflicts to review");return}if(!netOnline()){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts.find(x=>(!cid||x.id===cid)&&String(x.payload&&x.payload["Updated By"]||"")===activeProfile);if(!draft){const o=[...new Set(conflictDrafts.map(x=>x.payload&&x.payload["Updated By"]).filter(Boolean))];alert(o.length?"The conflicts on this device belong to "+o.join(", ")+". Switch to that profile to review them, so they are saved under the right name.":"No conflicts to review for "+activeProfile+".");return}if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
-$('conflictBtn').onclick=openReview;$('draftBarBtn').onclick=openDrafts;$('draftsClose').onclick=()=>$('draftsModal').classList.remove('show');$('discardDraftBtn').onclick=()=>{if(!confirm('Discard this draft? What you typed will be lost.'))return;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal()};$('draftsModal').addEventListener('click',e=>{if(e.target===$('draftsModal'))$('draftsModal').classList.remove('show')});pruneSavedDrafts();updateDraftUI();$('conflictBarBtn').onclick=openReview;
+async function reviewConflicts(cid){const alert=m=>askInfo("Review",String(m));const confirmAsync=m=>askConfirm({title:"Open the latest version?",body:String(m),yes:"Open & review",no:"Cancel",delay:300});cid=typeof cid==="string"?cid:null;if(!conflictDrafts.length){toast("No conflicts to review");return}if(!netOnline()){toast("Connect to the internet to review the latest Google Sheets version");return}toast("Opening the latest version…");await Promise.race([load().catch(()=>{}),new Promise(r=>setTimeout(r,6000))]);const draft=conflictDrafts.find(x=>(!cid||x.id===cid)&&String(x.payload&&x.payload["Updated By"]||"")===activeProfile);if(!draft){const o=[...new Set(conflictDrafts.map(x=>x.payload&&x.payload["Updated By"]).filter(Boolean))];alert(o.length?"The conflicts on this device belong to "+o.join(", ")+". Switch to that profile to review them, so they are saved under the right name.":"No conflicts to review for "+activeProfile+".");return}if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!await confirmAsync(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
+$('conflictBtn').onclick=openReview;$('draftBarBtn').onclick=openDrafts;$('draftsClose').onclick=()=>$('draftsModal').classList.remove('show');$('discardDraftBtn').onclick=async()=>{if(!await askConfirm({title:'Discard this draft?',body:'What you typed will be lost.',yes:'Yes, discard',no:'Keep it'}))return;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal()};$('draftsModal').addEventListener('click',e=>{if(e.target===$('draftsModal'))$('draftsModal').classList.remove('show')});pruneSavedDrafts();updateDraftUI();$('conflictBarBtn').onclick=openReview;
 window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(netOnline()?"Delete submitted…":"Delete queued until online");if(netOnline())syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
 async function nativeSaveShare(name,content,type){
@@ -1329,7 +1417,9 @@ $("addDateBtn").onclick=()=>{
 $("newDateInput").onchange=e=>{const v=e.target.value;if(!v)return;const [y,mo,da]=v.split("-").map(Number);if(y<2000||y>2099){toast("Choose a date from 2000 to 2099");return}addCountDate(mo+"/"+da+"/"+String(y).slice(2))};
 function setDrawer(open){$("drawer").classList.toggle("open",open);$("drawer").setAttribute("aria-hidden",String(!open));$("drawerBack").hidden=!open;$("menuBtn").setAttribute("aria-expanded",String(open));document.documentElement.style.overflow=open?"hidden":""}
 function updateToolbarToggle(){updateConflictUI()}
-function openActivity(){setDrawer(false);try{renderHistory()}catch(e){}$("activityModal").classList.add("show")}
+async function openActivity(){setDrawer(false);activityShown=300;try{renderHistory()}catch(e){}$("activityModal").classList.add("show");
+ if(!netOnline())return;const cnt=$("activityCount");if(cnt)cnt.textContent="Loading full history…";
+ try{const res=await jsonp({action:"activity",limit:3000},60000);if(Array.isArray(res.activity)){activity=res.activity;renderHistory()}}catch(e){try{renderHistory()}catch(_){}toast("Could not load the full history: "+(e&&e.message||e))}}
 function closeActivity(){$("activityModal").classList.remove("show")}
 $("menuActivityBtn").onclick=openActivity;$("activityClose").onclick=closeActivity;
 $("activityModal").addEventListener("click",e=>{if(e.target===$("activityModal"))closeActivity()});
@@ -1355,8 +1445,17 @@ function updateSortUI(){document.querySelectorAll("th.sortable").forEach(t=>{t.q
 function setSort(k,d){if(sortKey===k&&sortDir===d){sortKey=""}else{sortKey=k;sortDir=d}page=1;updateSortUI();render()}
 document.querySelector("thead").addEventListener("click",e=>{const th=e.target.closest("th.sortable");if(!th)return;const k=th.dataset.sort,ar=e.target.closest("i[data-dir]");if(ar)setSort(k,ar.dataset.dir);else setSort(k,sortKey!==k?"asc":"desc")});
 $("search").oninput=()=>{page=1;render()};$("filter").onchange=()=>{page=1;render()};$("countDate").onchange=()=>{page=1;render()};$("loadMore").onclick=()=>{page++;render()};
-document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));$("inventoryView").style.display=activeTab==="inventory"?"":"none";$("activityView").style.display=activeTab==="activity"?"":"none"});
-function renderHistory(){$("history").innerHTML=activity.slice(0,150).map(a=>`<div class="historyitem"><div><b>${esc(a.action||"Updated")}</b> · ${esc(a.partNo||"") }<br><small>${esc(a.by||"Unknown")} · ${esc(fmtDateTime(a.at))}</small></div><small>${esc(a.details||"")}</small></div>`).join("")||`<div class="empty">No activity recorded yet.</div>`}
+document.querySelectorAll("[data-tab]:not(#tabActivityBtn)").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));$("inventoryView").style.display=activeTab==="inventory"?"":"none";$("activityView").style.display=activeTab==="activity"?"":"none"});
+let activityShown=300;
+function renderHistory(){
+ const box=$("history");if(!box)return;
+ const q=($("activitySearch")?.value||"").trim().toLowerCase(),type=$("activityType")?.value||"";
+ const sel=$("activityType");if(sel){const acts=[...new Set(activity.map(a=>a.action||"Updated"))].sort();const cur=sel.value;if(sel.dataset.sig!==acts.join("|")){sel.dataset.sig=acts.join("|");sel.innerHTML='<option value="">All actions</option>'+acts.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");sel.value=acts.includes(cur)?cur:""}}
+ const list=activity.filter(a=>(!type||(a.action||"Updated")===type)&&(!q||[a.action,a.partNo,a.location,a.by,a.details,fmtDateTime(a.at)].join(" ").toLowerCase().includes(q)));
+ const cnt=$("activityCount");if(cnt)cnt.textContent=q||type?`${list.length.toLocaleString()} of ${activity.length.toLocaleString()} entries`:`${activity.length.toLocaleString()} recent entries`;
+ box.innerHTML=list.slice(0,activityShown).map(a=>{const parts=String(a.details||"").split(" | ");return `<div class="historyitem" style="display:block"><div><b>${esc(a.action||"Updated")}</b>${a.partNo?" · "+esc(a.partNo):""}${a.location?" · "+esc(a.location):""}<br><small>${esc(a.by||"Unknown")} · ${esc(fmtDateTime(a.at))}</small></div>${parts.filter(Boolean).map(p=>`<div style="font-size:12px;margin-top:3px;white-space:normal;word-break:break-word">${esc(p)}</div>`).join("")}</div>`}).join("")||`<div class="empty">${activity.length?"No entries match your search.":"No activity recorded yet."}</div>`;if(list.length>activityShown)box.insertAdjacentHTML("beforeend",`<div style="text-align:center;padding:10px"><button type="button" class="ghost" id="activityMore">Show more (${(list.length-activityShown).toLocaleString()} left)</button></div>`)}
+$("activitySearch").addEventListener("input",()=>{activityShown=300;renderHistory()});$("activityType").addEventListener("change",()=>{activityShown=300;renderHistory()});$("history").addEventListener("click",e=>{if(e.target.id==="activityMore"){activityShown+=300;renderHistory()}});
+$("tabActivityBtn").onclick=openActivity;
 saveLocal();
 render();
 load();
