@@ -488,7 +488,7 @@ async function refreshFromSheets(){
    syncCursors=res.cursors||syncCursors;saveCursors();
    more=!!res.more;
   }
-  if(anyChanged){saveLocal();render();renderHistory()}
+  if(anyChanged){saveLocal();render();renderHistory();pruneSavedDrafts()}
  }catch(e){/* Keep the last confirmed local cache; retry on the next light check. */}
 }
 
@@ -701,6 +701,7 @@ async function syncQueue(){
  // can avoid immediately polling the same rows back from Sheets. Failed or
  // conflicting requests still require a delta check to reconcile the latest state.
  if(!receivedCursors||failed||conflictCount)await refreshFromSheets();
+ pruneSavedDrafts();
  if(conflictCount)toast(`${conflictCount} edit(s) conflicted. Your changes are preserved; review and reapply them against the latest record.`);
  else if(!wasCancelled&&!queue.length&&!failed){
   if(window.__importState){
@@ -780,6 +781,27 @@ function saveFormDraftNow(){clearTimeout(draftTimer);if(!modalDraftKey||!$("edit
  writeFormDrafts(all)}
 function scheduleDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(saveFormDraftNow,400)}
 function removeFormDraft(key){if(!key)return;writeFormDrafts(readFormDrafts().filter(d=>d.key!==key))}
+/* A draft is "already saved" when everything in it matches the saved record, so keeping it only
+   makes the "unsaved draft" bar show up for no reason. Used after saving and after each sync. */
+function draftIsSaved(d){
+ const sn=d&&d.snap;if(!sn||!sn.fields||sn.clear)return false;const f=sn.fields;
+ const r=records.find(x=>recordKey(x)===recordKey({"Part no.":f.fPart,Location:f.fLocation}));if(!r)return false;
+ const same=(a,b)=>String(a??"").trim()===String(b??"").trim();
+ if(!same(f.fDesc,r["Part Description"])||!same(f.fSrp,r.SRP)||!same(f.fCost,r.Cost)||!same(f.fEnd,r["End Inv."])||!same(f.fRemarks,r.Remarks))return false;
+ const dates=sn.dates||{};
+ for(const k of Object.keys(dates)){const v=dates[k]||{};if(v.clear?String(r[k]??"")!=="":!same(v.v,r[k]))return false}
+ if(String(f.fCount||"").trim()!==""&&f.fDate&&!same(f.fCount,r[f.fDate]))return false;
+ return true}
+function pruneSavedDrafts(){
+ try{const all=readFormDrafts();if(!all.length)return;
+  const keep=all.filter(d=>d.key===modalDraftKey||!draftIsSaved(d));
+  if(keep.length!==all.length)writeFormDrafts(keep)}catch(_){}}
+/* After a save, also drop any other draft for the same part + location (for example one started
+   from "Add part" or left behind by tapping outside the popup). */
+function removeDraftsFor(recordId,partNo,location){
+ const k=recordKey({"Part no.":partNo,Location:location});
+ const all=readFormDrafts(),keep=all.filter(d=>!((recordId&&String(d.recordId)===String(recordId))||(d.snap&&d.snap.fields&&recordKey({"Part no.":d.snap.fields.fPart,Location:d.snap.fields.fLocation})===k)));
+ if(keep.length!==all.length)writeFormDrafts(keep)}
 function applyFormSnapshot(sn){FORM_IDS.forEach(id=>{if(sn.fields[id]!==undefined)$(id).value=sn.fields[id]});countDrafts=sn.dates||{};clearCountRequested=!!sn.clear;modalDate=$("fDate").value;updateCountContext()}
 function updateDraftUI(){const n=readFormDrafts().length,bar=$("draftBar");if(!bar)return;bar.hidden=!n;$("draftBarText").textContent=n===1?"You have 1 unsaved draft.":`You have ${n} unsaved drafts.`;const d=$("discardDraftBtn");if(d)d.style.display=modalDraftKey&&readFormDrafts().some(x=>x.key===modalDraftKey)?"inline-block":"none"}
 function openDrafts(){const list=readFormDrafts();if(!list.length){$("draftsModal").classList.remove("show");return}
@@ -798,7 +820,7 @@ $("rows").addEventListener("click",openFromRow);$("cards").addEventListener("cli
 window.editPart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(r)openModal(r)}
 window.quickCount=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;openModal(r);$("fCount").focus()};
 async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts to review");return}if(!netOnline()){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts[0];if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
-$('conflictBtn').onclick=reviewConflicts;$('draftBarBtn').onclick=openDrafts;$('draftsClose').onclick=()=>$('draftsModal').classList.remove('show');$('discardDraftBtn').onclick=()=>{if(!confirm('Discard this draft? What you typed will be lost.'))return;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal()};$('draftsModal').addEventListener('click',e=>{if(e.target===$('draftsModal'))$('draftsModal').classList.remove('show')});updateDraftUI();$('conflictBarBtn').onclick=reviewConflicts;
+$('conflictBtn').onclick=reviewConflicts;$('draftBarBtn').onclick=openDrafts;$('draftsClose').onclick=()=>$('draftsModal').classList.remove('show');$('discardDraftBtn').onclick=()=>{if(!confirm('Discard this draft? What you typed will be lost.'))return;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal()};$('draftsModal').addEventListener('click',e=>{if(e.target===$('draftsModal'))$('draftsModal').classList.remove('show')});pruneSavedDrafts();updateDraftUI();$('conflictBarBtn').onclick=reviewConflicts;
 window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(netOnline()?"Delete submitted…":"Delete queued until online");if(netOnline())syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
 async function nativeSaveShare(name,content,type){
@@ -958,7 +980,7 @@ let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location
  if(others.length)msg+=`\n\nNot saved (other dates you typed): ${others.map(k=>dateLabel(k.slice(7,-1))).join(", ")}`;
  if(isPastDate(date)||others.length){if(!confirm(msg))return}
  obj[byKey]=newCount===""?"":activeProfile;if(newCount!=="")obj.Profile=activeProfile}
-if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
+if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;removeFormDraft(modalDraftKey);modalDraftKey=null;removeDraftsFor(original?.id,typedPart,typedLoc);closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
 async function addCountDate(ds){
