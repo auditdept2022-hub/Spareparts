@@ -252,12 +252,25 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 .stat.prog small{display:block!important;font-size:9px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
 .stat .pdate{display:none}
 }
-.trirow{display:flex;gap:14px;align-items:flex-end;margin-top:1px}
-.trirow span{display:flex;flex-direction:column;line-height:1.1}
-.trirow b{font-size:19px;letter-spacing:-.3px}
-.trirow i{font-style:normal;font-size:10.5px;color:var(--muted)}
-.trirow .tb b{color:#168653}.trirow .tc b{color:#c43d4b}.trirow .to b{color:#b58300}
-@media(max-width:760px){.stat.tri .trirow{justify-content:center;gap:7px;margin:1px 0 0}.trirow b{font-size:14px}.trirow i{font-size:8.5px}}
+.trirow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:3px}
+.trirow>span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;padding:0 10px;border-left:1px solid var(--line);min-width:0}
+.trirow>span:first-child{padding-left:0;border-left:0}
+.trirow b{font-size:20px;font-weight:800;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.trirow i{font-style:normal;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.trirow i::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.trirow .tb b{color:#168653}.trirow .tb i::before{color:#168653}
+.trirow .tc b{color:#c43d4b}.trirow .tc i::before{color:#c43d4b}
+.trirow .to b{color:#d9a40b}.trirow .to i::before{color:#d9a40b}
+@media(max-width:760px){
+.stat.tri .trirow{margin:2px 0 0}
+.trirow>span{padding:0 3px;align-items:center}
+.trirow b{font-size:14px}
+.trirow i{font-size:8.5px;gap:2px}
+.trirow i::before{width:4px;height:4px}
+}
+.trirow .tn b{color:#6b7a90}.trirow .tn i::before{color:#9aa6b8}
+@media(min-width:761px){.stats{grid-template-columns:1fr 1.2fr 1fr 1.8fr!important}}
+@media(max-width:760px){.stats{grid-template-columns:.8fr 1fr 1fr 2fr!important}.trirow b{font-size:13px}.trirow>span{padding:0 2px}}
 </style>
 </head>
 <body>
@@ -271,7 +284,7 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
  <section class="stats">
   <div class="stat"><div class="k"><span class="lf">Total parts</span><span class="ls">Total</span></div><strong id="totalParts">—</strong><small>Inventory records</small></div>
   <div class="stat prog"><div class="k"><span class="lf">Checked progress</span><span class="ls">Checked</span></div><strong><span id="countedToday">—</span><span class="of"> / <span id="progTotal">—</span></span></strong><small><span id="todayLabel">Selected date</span><span class="pdate" id="progDate"></span></small></div>
-  <div class="stat tri"><div class="k"><span class="lf">Count result</span><span class="ls">Result</span></div><div class="trirow"><span class="tb"><b id="nBal">—</b><i><span class="lf">Balanced</span><span class="ls">Bal</span></i></span><span class="tc"><b id="nShort">—</b><i>Short</i></span><span class="to"><b id="nOver">—</b><i>Over</i></span></div></div>
+  <div class="stat tri"><div class="k"><span class="lf">Count result</span><span class="ls">Result</span></div><div class="trirow"><span class="tb"><b id="nBal">—</b><i><span class="lf">Balanced</span><span class="ls">Bal</span></i></span><span class="tc"><b id="nShort">—</b><i>Short</i></span><span class="to"><b id="nOver">—</b><i>Over</i></span><span class="tn"><b id="nNone">—</b><i><span class="lf">Not counted</span><span class="ls">Left</span></i></span></div></div>
   <div class="stat prog"><div class="k"><span class="lf">Saved to Sheets</span><span class="ls">Saved</span></div><strong><span id="syncedCount">—</span><span class="of"> / <span id="syncTotal">—</span></span></strong><small id="pendingSync">All saved</small></div>
  </section>
  <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
@@ -805,7 +818,7 @@ function counterList(r,dt){return String(counterFor(r,dt)||"").split("/").map(x=
 function counterFor(r,dt){return r["Counted By ("+dt.slice(7,-1)+")"]||(isCounted(r[dt])?r.Profile:"")||""}
 function balClass(r,dt){const b=balanceFor(r,dt);return b===""?"":b===0?"bal-ok":b>0?"bal-over":"bal-short"}
 function statusFor(r,dt){let b=balanceFor(r,dt);return b===""?"—":b===0?"Balanced":b>0?"Over":"Short"}
-function updateStats(){const dt=currentDate();if(!dt)return;let counted=0,nb=0,ns=0,no=0;for(const r of records){if(isCounted(r[dt]))counted++;const b=balanceFor(r,dt);if(b===0)nb++;else if(b!==""&&b>0)no++;else ns++}const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set("totalParts",records.length.toLocaleString());set("countedToday",counted.toLocaleString());set("nBal",nb.toLocaleString());set("nShort",ns.toLocaleString());set("nOver",no.toLocaleString());const pend=new Set();let pn=0;for(const q of queue){const pl=q.payload||{};if(Array.isArray(pl.records))pn+=pl.records.length;else pend.add(String(pl.id??pl["Part no."]??Math.random()))}pn+=pend.size;pn=Math.min(pn,records.length);set("syncedCount",(records.length-pn).toLocaleString());set("syncTotal",records.length.toLocaleString());set("pendingSync",pn?pn.toLocaleString()+(isSyncing?" saving…":(netOnline()?" pending":" pending · offline")):"All saved");set("progTotal",records.length.toLocaleString());const pct=records.length?counted/records.length*100:0;set("todayLabel",(Math.round(pct*10)/10)+"% checked");set("progDate"," · "+($("countDate").selectedOptions[0]?.textContent||""))}
+function updateStats(){const dt=currentDate();if(!dt)return;let counted=0,nb=0,ns=0,no=0,nn=0;for(const r of records){if(isCounted(r[dt]))counted++;const t=totalCount(r);if(t===""){nn++;continue}const e=Number(r["End Inv."]),d=t-(Number.isFinite(e)&&isCounted(r["End Inv."])?e:0);if(d===0)nb++;else if(d>0)no++;else ns++}const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set("totalParts",records.length.toLocaleString());set("countedToday",counted.toLocaleString());set("nBal",nb.toLocaleString());set("nShort",ns.toLocaleString());set("nOver",no.toLocaleString());set("nNone",nn.toLocaleString());const pend=new Set();let pn=0;for(const q of queue){const pl=q.payload||{};if(Array.isArray(pl.records))pn+=pl.records.length;else pend.add(String(pl.id??pl["Part no."]??Math.random()))}pn+=pend.size;pn=Math.min(pn,records.length);set("syncedCount",(records.length-pn).toLocaleString());set("syncTotal",records.length.toLocaleString());set("pendingSync",pn?pn.toLocaleString()+(isSyncing?" saving…":(netOnline()?" pending":" pending · offline")):"All saved");set("progTotal",records.length.toLocaleString());const pct=records.length?counted/records.length*100:0;set("todayLabel",(Math.round(pct*10)/10)+"% checked");set("progDate"," · "+($("countDate").selectedOptions[0]?.textContent||""))}
 function renderCountHeads(dt){const tr=document.querySelector("thead tr"),anchor=tr.querySelector('th[data-sort="remarks"]');tr.querySelectorAll("th.countcol").forEach(t=>t.remove());COUNT_FIELDS.forEach(f=>{const th=document.createElement("th");th.className="sortable countcol";th.dataset.sort="count:"+f;th.innerHTML='<span class="hl">'+dateLabel(f.slice(7,-1))+'</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span>';tr.insertBefore(th,anchor)});updateSortUI()}
 function render(){updateToolbarToggle();let q=$("search").value.trim().toLowerCase(),filter=$("filter").value,dt=currentDate();let filtered=records.filter(r=>{let hay=[r["Part no."],r["Part Description"],r.Location,r.Remarks].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;let c=r[dt];if(filter==="counted"&&!isCounted(c))return false;if(filter==="uncounted"&&isCounted(c))return false;if(filter==="discrepancy"&&!isVariance(r,dt))return false;if(filter==="balanced"&&balanceFor(r,dt)!==0)return false;if(filter==="over"&&!(balanceFor(r,dt)>0))return false;if(filter==="short"&&!(balanceFor(r,dt)!==""&&balanceFor(r,dt)<0))return false;if(filter==="remarks"&&!String(r.Remarks||"").trim())return false;return true});filtered=sortRows(filtered,dt);updateStats();renderCountHeads(dt);
  let checkerCounts=PROFILES.map(name=>({name,count:records.filter(r=>isCounted(r[dt])&&counterList(r,dt).some(x=>x.toLowerCase()===name.toLowerCase())).length}));$("checkerSummary").innerHTML='<span><b>Counted by:</b></span>'+checkerCounts.map(x=>`<span>${esc(x.name)} <b>${x.count}</b></span>`).join('');
