@@ -407,7 +407,7 @@ window.addEventListener("online",probeNet);
 window.addEventListener("offline",()=>{netReachable=false;setNet()});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)probeNet()});
 window.addEventListener("focus",probeNet);
-setInterval(()=>{if(!document.hidden)probeNet()},5000);
+setInterval(()=>{if(!document.hidden)probeNet()},15000);
 setNet();probeNet();
 function jsonp(params,timeoutMs=25000){window.__reqStart=Date.now();window.__reqAction=params.action;return new Promise((resolve,reject)=>{if(!API_URL.startsWith("https://script.google.com/"))return reject(Error("Apps Script URL is not configured"));let cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6),s=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(Error("Server timeout"))},timeoutMs);function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{cleanup();d&&d.ok?resolve(d):reject(Error(d?.error||"Request failed"))};params.callback=cb;s.src=API_URL+"?"+new URLSearchParams(params).toString();s.onerror=()=>{cleanup();reject(Error("Could not reach Google Sheets"))};document.body.appendChild(s)})}
 async function postApi(action,payload){return jsonp({action,payload:JSON.stringify(payload)},action==="import"?75000:25000)}
@@ -525,7 +525,12 @@ setInterval(()=>{
  const secs=Math.round((Date.now()-(window.__reqStart||Date.now()))/1000);
  if(secs>=5&&window.__reqAction==="import"){const st=window.__importState;$("importDetail").textContent=`Waiting for Google to confirm batch ${st.confirmedBatches+1} of ${st.totalBatches}… ${secs}s (limit 75s, then it retries automatically). If this never moves, press Test connection.`}
 },1000);
-window.setInterval(refreshFromSheets,15000);
+/* POLLING: every 15s while the app is in use, only every 60s after 2 minutes without a touch/key press.
+   The first touch after an idle spell refreshes immediately, so nothing looks stale. */
+let lastTouch=Date.now(),pollTick=0;
+const IDLE_MS=120000;
+["pointerdown","keydown","touchstart","wheel"].forEach(ev=>addEventListener(ev,()=>{const wasIdle=Date.now()-lastTouch>IDLE_MS;lastTouch=Date.now();if(wasIdle&&!document.hidden)refreshFromSheets()},{passive:true,capture:true}));
+window.setInterval(()=>{if(document.hidden)return;pollTick++;if(Date.now()-lastTouch>IDLE_MS&&pollTick%4!==0)return;refreshFromSheets()},15000);
 /* AUTO SYNC: whenever the app is online and changes are waiting, send them by itself (no button needed).
    Pause sync still stops it. After a failure it retries with a growing pause (8s, 16s, 32s, max 60s). */
 let autoFails=0,autoNextAt=0,autoBusy=false;
@@ -645,7 +650,13 @@ async function syncQueue(){
     updateSyncStatus(item.action==="import"?`Uploading import batch ${item.payload?.batchNumber||""} of ${item.payload?.totalBatches||""}…`:`Sending ${syncCompletedCount+1} of ${syncStartedCount} saved changes…`);
     let response=item.action==="import"?await importWithRetry(item.payload,myEpoch):await jsonp({action:item.action,payload:JSON.stringify(item.payload)});
     if(myEpoch!==syncEpoch)break;
-    if(response.cursors){syncCursors=response.cursors;saveCursors();receivedCursors=true}
+    if(response.cursors){
+     // Jump straight to the server's cursors only if nobody else wrote since this device last synced
+     // (the server tells us the cursors from just before our write). Otherwise keep the old cursor so
+     // the delta check downloads the other devices' edits instead of silently skipping them.
+     const b=response.cursorsBefore,c=syncCursors;
+     if(!b||(c&&Number(c.changes)===Number(b.changes)&&Number(c.activity)===Number(b.activity)&&Number(c.history)===Number(b.history))){syncCursors=response.cursors;saveCursors();receivedCursors=true}
+    }
     if(item.action==="import"&&Array.isArray(response.records)){
      response.records.forEach(record=>applyDeltaRecord({id:record.id,operation:"upsert",record}));
     }
