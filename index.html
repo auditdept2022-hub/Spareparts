@@ -214,6 +214,10 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
 @media(min-width:761px){.wrap{padding-left:16px!important;padding-right:16px!important}.top{padding-left:16px!important;padding-right:16px!important}}
 @media(min-width:1200px){.wrap{padding-left:20px!important;padding-right:20px!important}.top{padding-left:20px!important;padding-right:20px!important}}
 @media(min-width:1800px){.wrap{max-width:none!important}.desc{max-width:600px}}
+
+/* Sideways scrollbar pinned to the bottom of the screen (follows the table) */
+#hbar{position:fixed;bottom:0;z-index:45;height:18px;overflow-x:scroll;overflow-y:hidden;background:#ffffffee;border-top:1px solid var(--line);box-shadow:0 -4px 12px #0b172914}
+#hbar[hidden]{display:none}#hbarInner{height:1px}
 </style>
 </head>
 <body>
@@ -297,6 +301,7 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
   <div id="checkerSummary" class="checker-summary"></div>
  </div>
 </aside>
+<div id="hbar" hidden aria-hidden="true"><div id="hbarInner"></div></div>
 <div class="toast" id="toast"></div>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz8I3-QNdbkqOgyAnwpd2hc80sxmyaUsEzJnPuqgUKRySj7eBZRe-4I-bzkvofnJ70Z8w/exec";
@@ -710,8 +715,10 @@ async function syncQueue(){
 
 function currentDate(){return $("countDate").value}
 function isCounted(v){return v!==""&&v!==null&&v!==undefined}
-function isVariance(r,dt){let c=r[dt],e=r["End Inv."];return isCounted(c)&&isCounted(e)&&Number.isFinite(Number(c))&&Number.isFinite(Number(e))&&Number(c)!==Number(e)}
-function balanceFor(r,dt){return isCounted(r[dt])&&isCounted(r["End Inv."])&&Number.isFinite(Number(r[dt]))&&Number.isFinite(Number(r["End Inv."]))?Number(r[dt])-Number(r["End Inv."]):""}
+function totalCount(r){let sum=0,any=false;COUNT_FIELDS.forEach(f=>{const v=r[f];if(isCounted(v)&&Number.isFinite(Number(v))){sum+=Number(v);any=true}});return any?sum:""}
+function isVariance(r,dt){const b=balanceFor(r,dt);return b!==""&&b!==0}
+// Balance compares the TOTAL counted across all count dates with End Inv.
+function balanceFor(r,dt){const t=totalCount(r),e=r["End Inv."];return t!==""&&isCounted(e)&&Number.isFinite(Number(e))?t-Number(e):""}
 function counterFor(r,dt){return r["Counted By ("+dt.slice(7,-1)+")"]||(isCounted(r[dt])?r.Profile:"")||""}
 function balClass(r,dt){const b=balanceFor(r,dt);return b===""?"":b===0?"bal-ok":b>0?"bal-over":"bal-short"}
 function statusFor(r,dt){let b=balanceFor(r,dt);return b===""?"—":b===0?"Balanced":b>0?"Over":"Short"}
@@ -899,7 +906,35 @@ $('importBtn').onclick=()=>{
 };
 $('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(importPrepReload){setImportStatus("","Reloading latest data…","Refreshing from Google Sheets before the import starts.",0,false);await importPrepReload;importPrepReload=null}await importFile(f);e.target.value=''};
 $('csvBtn').onclick=openExport;$('exportGo').onclick=exportCSV;$('exportClose').onclick=$('exportCancel').onclick=closeExport;$('exportDate').onchange=refreshExportCounts;$('exportList').onchange=refreshExportCounts;$('exportModal').addEventListener('click',e=>{if(e.target===$('exportModal'))closeExport()});
-$("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");let obj={"Part no.":$("fPart").value.trim(),"Part Description":$("fDesc").value.trim(),SRP:$("fSrp").value,Cost:$("fCost").value,"End Inv.":$("fEnd").value,Location:$("fLocation").value.trim(),Remarks:$("fRemarks").value,"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if($("fCount").value!=="")obj[date]=$("fCount").value;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(editId||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":($("fCount").value!==""?$("fCount").value:prevCount);if(String(prevCount??"")!==String(newCount??"")){
+const normTxt=v=>String(v||"").trim().toUpperCase();
+const locTokens=l=>String(l||"").split("/").map(normTxt).filter(Boolean);
+$("saveBtn").onclick=async()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;
+ const typedPart=$("fPart").value.trim(),typedLoc=$("fLocation").value.trim();let countVal=$("fCount").value,addedLocation=null,fromAdd=false;
+ const dateSel=$("fDate").value,dateName=dateLabel(dateSel.slice(7,-1));
+ if(!original&&typedLoc){
+  const ex=records.find(r=>normTxt(r["Part no."])===normTxt(typedPart)&&String(r.Location||"").trim()!=="");
+  if(ex){
+   if(locTokens(ex.Location).includes(normTxt(typedLoc))){toast(`This part is already recorded at ${typedLoc}. Open it from the list and edit it instead.`);return}
+   original=ex;fromAdd=true;
+  }
+ }
+ if(original&&typedLoc&&String(original.Location||"").trim()!==""&&normTxt(original.Location)!==normTxt(typedLoc)&&!locTokens(original.Location).includes(normTxt(typedLoc))){
+  const existing=original[dateSel],hasEx=isCounted(existing);
+  const typedNew=countVal!==""&&(fromAdd||countVal!==String(existing??""));
+  const combined=String(original.Location).trim()+"/"+typedLoc;
+  const sum=typedNew?(Number(hasEx?existing:0)+Number(countVal)):null;
+  const countLine=typedNew?(hasEx?`${dateName}: ${existing} + ${countVal} = ${sum}  (same date, so the quantities are added)`:`${dateName}: ${countVal}  (new count on this date)`):`${dateName}: stays ${hasEx?existing:"(blank)"}  (no new quantity typed)`;
+  const others=COUNT_FIELDS.filter(f=>f!==dateSel&&isCounted(original[f])).map(f=>`${dateLabel(f.slice(7,-1))}: ${original[f]}`);
+  const after={...original,[dateSel]:typedNew?sum:original[dateSel]},tot=totalCount(after),endv=original["End Inv."];
+  const addIt=await askConfirm({title:"Add another location?",body:`${original["Part no."]} is already recorded at ${original.Location}.\n\nLocation will become: ${combined}\n\nSaved on the date it was found:\n${countLine}\n`+(others.length?`Other dates stay as they are: ${others.join(" · ")}\n`:"")+`\nTotal after saving: ${tot===""?"(none)":tot}${isCounted(endv)?" (End Inv. "+endv+")":""}\n\nWrong date? Press No, then Cancel, and change "Count date" in the form.`,yes:"Yes, save",no:"No",delay:500});
+  if(addIt){addedLocation=combined;countVal=typedNew?String(sum):"";clearCountRequested=false}
+  else{
+   if(fromAdd)return;
+   const rep2=await askConfirm({title:"Replace the location instead?",body:`Replace ${original.Location} with ${typedLoc}? Use this only to correct a mistake; the old location will be gone from this record.\n\nPress Cancel to go back to the form (to change the date or location).`,yes:"Replace location",no:"Cancel",delay:500});
+   if(!rep2)return;
+  }
+ }
+let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");const keep=(v,k)=>fromAdd&&v===""?(original[k]??""):v;let obj={"Part no.":typedPart,"Part Description":keep($("fDesc").value.trim(),"Part Description"),SRP:keep($("fSrp").value,"SRP"),Cost:keep($("fCost").value,"Cost"),"End Inv.":keep($("fEnd").value,"End Inv."),Location:addedLocation||typedLoc,Remarks:keep($("fRemarks").value,"Remarks"),"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if(countVal!=="")obj[date]=countVal;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(original?.id||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":(countVal!==""?countVal:prevCount);if(String(prevCount??"")!==String(newCount??"")){
  const lbl=dateLabel(date.slice(7,-1));
  const others=Object.keys(countDrafts).filter(k=>k!==date);
  let msg=`Save the count for ${lbl} only?\n\n${prevCount===""||prevCount==null?"(blank)":prevCount}  →  ${newCount===""?"(clear)":newCount}`;
@@ -907,7 +942,7 @@ $("saveBtn").onclick=()=>{let form=$("partForm");if(!form.reportValidity())retur
  if(others.length)msg+=`\n\nNot saved (other dates you typed): ${others.map(k=>dateLabel(k.slice(7,-1))).join(", ")}`;
  if(isPastDate(date)||others.length){if(!confirm(msg))return}
  obj[byKey]=newCount===""?"":activeProfile;if(newCount!=="")obj.Profile=activeProfile}
-if(editId){let i=records.findIndex(x=>String(x.id)===String(editId));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
+if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
 async function addCountDate(ds){
@@ -954,5 +989,24 @@ if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.ser
 <div class="modalback" id="confirmBack" style="z-index:60"><div class="modal confirmbox" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(420px,100%)"><div class="modalhead"><h2 id="confirmTitle"></h2></div><div class="modalbody" id="confirmBody" style="white-space:pre-line"></div><div class="modalfoot"><button class="secondary" id="confirmNo" type="button"></button><button class="danger" id="confirmYes" type="button"></button></div></div></div>
 <script>
 (function(){var h=document.querySelector("header.top");if(!h)return;function set(){document.documentElement.style.setProperty("--topH",h.offsetHeight+"px")}set();window.addEventListener("resize",set);window.addEventListener("orientationchange",set);window.addEventListener("load",set);if(window.ResizeObserver)new ResizeObserver(set).observe(h)})();
+</script>
+<script>
+(function(){
+ const g=id=>document.getElementById(id),bar=g("hbar"),inner=g("hbarInner");let lock=false,raf=0;
+ const wrap=()=>document.querySelector("#inventoryView .tablewrap");
+ function sync(){raf=0;const w=wrap();if(!w||w.offsetParent===null){bar.hidden=true;return}
+  const r=w.getBoundingClientRect(),over=w.scrollWidth>w.clientWidth+1,nativeVisible=r.bottom<=innerHeight-2,
+   blocked=document.querySelector(".modalback.show")||g("drawer")?.classList.contains("open");
+  bar.hidden=!over||nativeVisible||!!blocked||r.top>innerHeight-24;
+  if(bar.hidden)return;
+  bar.style.left=r.left+"px";bar.style.width=r.width+"px";inner.style.width=w.scrollWidth+"px";
+  if(!lock)bar.scrollLeft=w.scrollLeft}
+ const queue=()=>{if(!raf)raf=requestAnimationFrame(sync)};
+ bar.addEventListener("scroll",()=>{const w=wrap();if(!w)return;lock=true;w.scrollLeft=bar.scrollLeft;setTimeout(()=>lock=false,30)});
+ const w0=wrap();if(w0){w0.addEventListener("scroll",queue,{passive:true});if(window.ResizeObserver){const ro=new ResizeObserver(queue);ro.observe(w0);const t=w0.querySelector("table");if(t)ro.observe(t)}}
+ addEventListener("scroll",queue,{passive:true});addEventListener("resize",queue);
+ new MutationObserver(queue).observe(document.body,{attributes:true,subtree:true,attributeFilter:["class","hidden"]});
+ setInterval(queue,1000);queue();
+})();
 </script>
 </body></html>
