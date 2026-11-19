@@ -1,7 +1,7 @@
-// Parts Inventory service worker (replacement, cache v71)
+// Parts Inventory service worker (replacement, cache v72)
 // - Page + assets: network first, falls back to the cached copy when offline
 // - Google Apps Script / any other origin: never cached, always goes to the network
-const CACHE = "parts-inventory-v71";
+const CACHE = "parts-inventory-v72";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./favicon.png", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./logo.png"
