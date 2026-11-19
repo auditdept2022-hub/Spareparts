@@ -331,7 +331,7 @@ function fmtDateTime(v){
 let countDates=[];
 function fillDateSelects(){["countDate","fDate"].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML=COUNT_FIELDS.map(f=>`<option value="${f}">${dateLabel(f.slice(7,-1))}</option>`).join("");s.value=COUNT_FIELDS.includes(cur)?cur:COUNT_FIELDS[0]})}
 function setCountDates(list){
- const next=[...new Set([...DEFAULT_DATES,...(list||[])].map(String).filter(d=>dKey(d)))].sort((a,b)=>dKey(a)-dKey(b));
+ const src=(list&&list.length)?list:DEFAULT_DATES,next=[...new Set(src.map(String).filter(d=>dKey(d)))].sort((a,b)=>dKey(a)-dKey(b));
  if(COUNT_FIELDS.length&&next.join("|")===countDates.join("|"))return false;
  countDates=next;
  COUNT_FIELDS.length=0;COUNT_FIELDS.push(...next.map(d=>"Count ("+d+")"));
