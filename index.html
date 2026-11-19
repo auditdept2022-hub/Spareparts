@@ -45,7 +45,7 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 /* HAMBURGER MENU / DRAWER */
 .top .menubtn{position:relative;width:36px;height:36px;padding:0;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
 .top .menubtn svg{width:20px;height:20px}.menudot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#f5b335;border:1.5px solid var(--navy)}
-.drawerback{position:fixed;inset:0;background:#0b1729a8;z-index:70}.drawerback[hidden]{display:none}
+.drawerback{position:fixed;inset:0;background:#0b1729a8;z-index:70}.drawerback[hidden]{display:none}.field[hidden]{display:none!important}
 .drawer{position:fixed;top:0;left:0;bottom:0;width:min(340px,88vw);background:#fff;z-index:71;transform:translateX(-100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:8px 0 30px #0b17292e;visibility:hidden}
 .drawer.open{transform:none;visibility:visible}
 .drawerhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);font-size:15px}
@@ -256,9 +256,9 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
   <form id="partForm"><div class="formgrid">
    <div class="field"><label>Part no. *</label><input id="fPart" required></div>
    <div class="field"><label>Part description *</label><input id="fDesc" required></div>
-   <div class="field"><label>SRP</label><input id="fSrp" type="number" step="any" min="0" inputmode="decimal"></div>
-   <div class="field"><label>Cost</label><input id="fCost" type="number" step="any" min="0" inputmode="decimal"></div>
-   <div class="field"><label>Profile / active counter</label><select id="fProfile" disabled><option>Edison</option><option>Karl</option><option>Laurence</option><option>Genesis</option></select></div>
+   <div class="field" hidden><label>SRP</label><input id="fSrp" type="number" step="any" min="0" inputmode="decimal"></div>
+   <div class="field" hidden><label>Cost</label><input id="fCost" type="number" step="any" min="0" inputmode="decimal"></div>
+   <div class="field"><label>Profile / active counter</label><input id="fProfile" disabled value=""></div>
    <div class="field"><label>Count date</label><select id="fDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select></div>
    <div class="trio">
     <div class="field"><label>Location</label><input id="fLocation" placeholder="Shelf / Location" required></div>
@@ -770,7 +770,8 @@ function isPastDate(f){const d=fieldDay(f);return !!d&&d<startOfToday()}
 function stashDraft(date){if(!date||!modalRecord&&!$('fCount').value)return;const saved=String(modalRecord?.[date]??""),typed=$('fCount').value;if(clearCountRequested)countDrafts[date]={v:"",clear:true};else if(typed!==saved)countDrafts[date]={v:typed,clear:false};else delete countDrafts[date]}
 function stashDraftLive(date){stashDraft(date)}
 function switchCountDate(date){stashDraft(modalDate);$('fDate').value=date;modalDate=date;const d=countDrafts[date];if(d){$('fCount').value=d.v;clearCountRequested=d.clear}else{$('fCount').value=modalRecord?.[date]??"";clearCountRequested=false}updateCountContext()}
-function updateCountContext(){const date=$('fDate').value;modalDate=date;const value=modalRecord?.[date], byField="Counted By ("+date.slice(7,-1)+")", by=modalRecord?.[byField]||modalRecord?.Profile||"Unknown";const note=$('existingCountNote');if(isCounted(value)){note.textContent=`Existing count: ${value} (entered by ${by}). Saving a changed number edits this same count; it does not create a duplicate. Every revision is recorded.`;$('clearCountBtn').style.display='inline-block'}else{note.textContent="No count entered for this date yet. Entering a quantity will create the first count for this date.";$('clearCountBtn').style.display='none'}const part=String(modalRecord?.["Part no."]||"").trim().toUpperCase(),loc=String(modalRecord?.Location||"").trim().toUpperCase();
+function refreshProfileField(){const date=$('fDate').value,rec=modalRecord,counted=rec&&isCounted(rec[date]),typed=$('fCount').value!==""&&!clearCountRequested;$('fProfile').value=(counted||typed)?addCounter(rec?counterFor(rec,date):"",activeProfile):activeProfile}
+function updateCountContext(){const date=$('fDate').value;modalDate=date;refreshProfileField();const value=modalRecord?.[date], byField="Counted By ("+date.slice(7,-1)+")", by=modalRecord?.[byField]||modalRecord?.Profile||"Unknown";const note=$('existingCountNote');if(isCounted(value)){note.textContent=`Existing count: ${value} (entered by ${by}). Saving a changed number edits this same count; it does not create a duplicate. Every revision is recorded.`;$('clearCountBtn').style.display='inline-block'}else{note.textContent="No count entered for this date yet. Entering a quantity will create the first count for this date.";$('clearCountBtn').style.display='none'}const part=String(modalRecord?.["Part no."]||"").trim().toUpperCase(),loc=String(modalRecord?.Location||"").trim().toUpperCase();
  if(modalDate===date)stashDraftLive(date);
  $('countByDate').innerHTML=COUNT_FIELDS.map(f=>{const v=modalRecord?.[f],by=modalRecord?.["Counted By ("+f.slice(7,-1)+")"],dr=countDrafts[f],txt=dr?(dr.clear?"clear":dr.v)+" ●":(isCounted(v)?v:"—");return `<button type="button" data-d="${esc(f)}" class="${f===date?'sel':''} ${dr?'draft':''}" title="${esc(isCounted(v)?'Saved: '+v+(by?' by '+by:''):'Not counted')}${dr?' · unsaved':''}">${esc(dateLabel(f.slice(7,-1)).slice(0,5))}: ${esc(txt)}</button>`}).join('');
  $('countByDate').querySelectorAll('button').forEach(b=>b.onclick=()=>switchCountDate(b.dataset.d));
@@ -822,7 +823,7 @@ function openDrafts(){const list=myDrafts();if(!list.length){$("draftsModal").cl
 function closeModal(){saveFormDraftNow();modalDraftKey=null;$('editModal').classList.remove("show");clearCountRequested=false;currentConflictDraftId=null;updateDraftUI()}
 function cancelEdit(){closeModal()}
 $('fDate').onchange=()=>{switchCountDate($('fDate').value);scheduleDraft()};document.getElementById('partForm').addEventListener('input',scheduleDraft);document.getElementById('partForm').addEventListener('change',scheduleDraft);$('fCount').addEventListener('input',()=>{stashDraft(modalDate);updateCountContext()});
-$('fCount').oninput=()=>{countTouched[$('fDate').value]=true;if(clearCountRequested)clearCountRequested=false};
+$('fCount').oninput=()=>{countTouched[$('fDate').value]=true;if(clearCountRequested)clearCountRequested=false;refreshProfileField()};
 $('clearCountBtn').onclick=()=>{if(!modalRecord||!isCounted(modalRecord[$('fDate').value]))return;if(!confirm(`Clear the existing count for ${$('fDate').selectedOptions[0].textContent}? The previous value will remain in Count History.`))return;$('fCount').value="";clearCountRequested=true;$('existingCountNote').textContent="This count will be cleared when you save. The old value will remain in Count History."};
 function openFromRow(e){if(e.target.closest('details,button,a,input,select'))return;const row=e.target.closest('.clickrow');if(row)editPart(row.dataset.id)}
 $("rows").addEventListener("click",openFromRow);$("cards").addEventListener("click",openFromRow);
@@ -995,13 +996,13 @@ let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location
  const baseChain=original?(original[byKey]||(isCounted(original[date])?original.Profile:"")||""):"";
  const chain=newCount===""?"":addCounter(baseChain,activeProfile);
  obj[byKey]=chain;if(newCount!=="")obj.Profile=chain}
-else if(original&&!clearCountRequested&&countVal!==""&&countTouched[date]===true&&isCounted(original[date])){
- // Same number typed again by another person: add them to the Genesis/Laurence/Karl chain.
+else if(original&&!clearCountRequested&&isCounted(original[date])){
+ // Saved by another profile without changing the number: add them to the Genesis/Laurence/Karl chain.
  const baseChain=original[byKey]||original.Profile||"",chain=addCounter(baseChain,activeProfile);
  obj.confirmCount=true;obj[byKey]=chain;obj.Profile=chain}
 if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;removeFormDraft(modalDraftKey);modalDraftKey=null;removeDraftsFor(original?.id,typedPart,typedLoc);closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
-$("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;updateDraftUI();updateConflictUI();toast("Active profile: "+activeProfile)};
+$("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);refreshProfileField();updateDraftUI();updateConflictUI();toast("Active profile: "+activeProfile)};
 async function addCountDate(ds){
  const exists=countDates.includes(ds);
  if(!exists){
