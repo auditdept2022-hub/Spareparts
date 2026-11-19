@@ -208,6 +208,12 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
 .modal>.modalhead,.modal>.modalfoot{flex:none}
 .modal>.modalbody{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
 .modal>.modalfoot{border-top:1px solid var(--line);background:#fff}
+
+/* Full-width layout: use the whole screen, small gutter at the edges */
+.wrap{max-width:none!important;margin:0!important}
+@media(min-width:761px){.wrap{padding-left:16px!important;padding-right:16px!important}.top{padding-left:16px!important;padding-right:16px!important}}
+@media(min-width:1200px){.wrap{padding-left:20px!important;padding-right:20px!important}.top{padding-left:20px!important;padding-right:20px!important}}
+@media(min-width:1800px){.wrap{max-width:none!important}.desc{max-width:600px}}
 </style>
 </head>
 <body>
