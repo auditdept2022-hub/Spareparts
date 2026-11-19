@@ -57,6 +57,8 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .drawer .toolbar>.checker-summary{flex:none;order:0;padding:2px 0;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px}
 .conflictbar{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fff4e0;border:1px solid #f5b335;color:#6b4300;border-radius:12px;padding:9px 12px;margin:0 0 10px;font-size:13px}.conflictbar[hidden]{display:none}.conflictbar button{background:#f5b335;color:#1a2433;padding:7px 12px;font-size:13px;flex:none}.menudot.alert{background:#e5484d;width:10px;height:10px}
 .tabs button.addbtn{background:var(--blue);color:#fff;margin-left:auto;padding:4px 10px;font-size:12px;line-height:1.2;border-radius:8px;align-self:center}
+@media(min-width:761px){.tabs button.addbtn{padding:8px 16px;font-size:14px;border-radius:10px}}
+@media(min-width:1200px){.tabs button.addbtn{padding:10px 20px;font-size:15px}}
 .exportlist{display:grid;gap:6px;margin-top:10px}.exportopt{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:13px}.exportopt:has(input:checked){border-color:var(--blue);background:#f3f7ff}.exportopt input{width:18px;height:18px;margin:0;flex:none}.exportopt span{flex:1}.exportopt small{color:var(--muted);font-size:11px}.exportopt em{font-style:normal;font-weight:700;color:var(--muted);font-size:12px}.exportnote{font-size:11px;color:var(--muted);margin:10px 2px 0}
 .rownum{color:var(--muted);font-weight:600;font-size:11px;text-align:left;white-space:nowrap;padding-right:6px}th.rownum{width:1%}
 /* LOCK PAGE SCROLL WHILE A POPUP IS OPEN */
@@ -163,6 +165,49 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
  .trio input{padding:8px 6px;font-size:15px}
  .trio label{font-size:11px;white-space:nowrap}
 }
+
+/* ===== RESPONSIVE SCALE: phone stays compact; tablet, laptop and large screens get more room and larger text ===== */
+@media(min-width:761px){
+ body{font-size:14px;line-height:1.45}
+ .top{padding:12px max(20px,calc((100vw - 1440px)/2))}.logo{width:38px;height:38px;border-radius:11px}.brand h1{font-size:18px}
+ .wrap{padding:18px 22px 56px}
+ .stats{gap:12px;margin-bottom:14px}.stat{padding:13px 16px;border-radius:14px}.stat .k{font-size:12px}.stat strong{font-size:24px;margin-top:3px}.stat small{font-size:11px}
+ .panel{border-radius:16px}
+ .toolbar{padding:12px 14px;gap:10px}.search input{padding:10px 12px 10px 36px;font-size:14px}.search span{top:9px}
+ th,td{padding:9px 12px}th{font-size:11px}td{font-size:13.5px}.pill{padding:3px 10px;font-size:11.5px}.desc{max-width:340px}
+ .foot{padding:11px 14px}.empty{padding:36px}
+ .modal{border-radius:18px}.modalbody{padding:18px}.modalhead{padding:15px 18px}.modalfoot{padding:12px 18px}.formgrid{gap:13px}
+ .field label{margin-bottom:4px;font-size:12.5px}.field input,.field select,.field textarea{padding:10px 12px;font-size:14px}
+ .tabs button{font-size:14px}
+ #countByDate button{font-size:12.5px;padding:5px 10px}
+ #countHistoryList{max-height:170px!important}#countHistoryList .historyitem{font-size:13px}
+}
+@media(min-width:1200px){
+ body{font-size:15px}
+ .wrap{padding:22px 28px 64px}
+ .stats{gap:16px;margin-bottom:18px}.stat{padding:16px 20px}.stat strong{font-size:28px}.stat .k{font-size:13px}
+ th{font-size:12px}th,td{padding:11px 14px}td{font-size:14.5px}.desc{max-width:460px}
+ .search input{font-size:15px}
+ .modal{width:min(780px,100%)}
+}
+@media(min-width:1800px){
+ body{font-size:16px}
+ .wrap{max-width:1680px}
+ td{font-size:15.5px}th{font-size:12.5px}
+}
+/* touch devices: comfortable tap targets and no iOS auto-zoom on inputs */
+@media(pointer:coarse){
+ button,select,.tabs button{min-height:38px}
+ input,select,textarea{font-size:16px}
+ .tabs button.addbtn{min-height:30px}
+ #countByDate button{min-height:32px}
+}
+
+/* Popups: header and Save/Cancel stay pinned; only the form scrolls, on any screen height */
+.modal{display:flex;flex-direction:column;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);overflow:hidden}
+.modal>.modalhead,.modal>.modalfoot{flex:none}
+.modal>.modalbody{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.modal>.modalfoot{border-top:1px solid var(--line);background:#fff}
 </style>
 </head>
 <body>
