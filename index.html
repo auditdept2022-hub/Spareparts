@@ -334,6 +334,13 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 .drawer .fileactions:has(#refreshBtn) #refreshBtn{grid-column:1/-1}
 .drawer .fileactions #conflictBtn{grid-column:1/-1}
 .drawer .toolbar>.checker-summary{font-size:12px!important;gap:3px 10px!important;padding:0!important}
+/* Locked fields (Part no. / Part description while editing an existing part) */
+input.locked,input[readonly].locked{background:#f1f4fa!important;color:#5b6b82;cursor:not-allowed;border-style:dashed}
+/* Search keyboard switch: starts as number pad, tap to switch to letters (and back) */
+.search{position:relative}
+.search input#search{padding-right:56px!important}
+#kbToggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:0 10px!important;height:28px;min-height:0!important;line-height:28px;font-size:12px;font-weight:800;border-radius:8px;background:#eaf0fb;color:#1c3764;border:1px solid #c9d7f0}
+#kbToggle:active{background:#d7e3f9}
 </style>
 </head>
 <body>
@@ -350,7 +357,7 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
   <div class="stat tri"><div class="k"><span class="lf">Count result</span><span class="ls">Result</span></div><div class="trirow"><span class="tb"><b id="nBal">—</b><i><span class="lf">Balanced</span><span class="ls">Bal</span></i></span><span class="tc"><b id="nShort">—</b><i>Short</i></span><span class="to"><b id="nOver">—</b><i>Over</i></span><span class="tn"><b id="nNone">—</b><i><span class="lf">Not counted</span><span class="ls">Left</span></i></span></div></div>
   <div class="stat prog"><div class="k"><span class="lf">Saved to Sheets</span><span class="ls">Saved</span></div><strong><span id="syncedCount">—</span><span class="of"> / <span id="syncTotal">—</span></span></strong><small id="pendingSync">All saved</small></div>
  </section>
- <div class="search"><span>⌕</span><input id="search" inputmode="numeric" placeholder="Search part no., description, location..." autocomplete="off"></div>
+ <div class="search"><span>⌕</span><input id="search" inputmode="numeric" placeholder="Search part no., description, location..." autocomplete="off"><button type="button" id="kbToggle" aria-label="Switch keyboard between numbers and letters" title="Switch keyboard">ABC</button></div>
  </div>
 <div class="draftbar" id="draftBar" hidden><span id="draftBarText"></span><button type="button" id="draftBarBtn">Open drafts</button></div>
 <div class="conflictbar" id="conflictBar" hidden><span id="conflictBarText"></span><button type="button" id="conflictBarBtn">Review</button></div>
@@ -907,7 +914,10 @@ function openModal(r=null,draft=null){modalRecord=r?{...r}:null;editId=r?r.id:nu
  modalBaseline=snapKey(formSnapshot());modalOwner=activeProfile;modalDraftKey=draft?draft.key:(r?"rec:"+r.id+"|"+activeProfile:"new:"+Date.now()+"|"+activeProfile);
  if(!draft&&r){const d=readFormDrafts().find(x=>x.key===modalDraftKey&&String(x.by||"")===activeProfile);if(d)draft=d}
  if(draft){applyFormSnapshot(draft.snap);toast("Restored your unsaved draft. Save to keep it, or Discard draft.")}
+ lockPartFields(r);
  updateDraftUI()}
+// Editing an existing part: Part no. and Part description are locked and cannot be changed.
+function lockPartFields(r){const on=!!r;['fPart','fDesc'].forEach(id=>{const e=$(id);if(!e)return;if(on){e.value=id==='fPart'?(r['Part no.']||''):(r['Part Description']||'')}e.readOnly=on;e.classList.toggle('locked',on);if(on)e.setAttribute('aria-readonly','true');else e.removeAttribute('aria-readonly');e.title=on?'Locked: this cannot be changed':''})}
 let countDrafts={},modalDate="",countTouched={};
 function fieldDay(f){const m=String(f).match(/\((\d{1,2})\/(\d{1,2})\/(\d{2})\)/);return m?new Date(2000+ +m[3],+m[1]-1,+m[2]):null}
 function startOfToday(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
@@ -1230,14 +1240,14 @@ $('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(impo
 $('csvBtn').onclick=openExport;$('exportGo').onclick=exportCSV;$('exportClose').onclick=$('exportCancel').onclick=closeExport;$('exportDate').onchange=refreshExportCounts;$('exportList').onchange=refreshExportCounts;$('exportModal').addEventListener('click',e=>{if(e.target===$('exportModal'))closeExport()});
 $("saveBtn").onclick=async()=>{if(window.__saveLock)return;window.__saveLock=true;setTimeout(()=>{window.__saveLock=false},800);let form=$("partForm");if(!form.reportValidity())return;if(modalOwner&&modalOwner!==activeProfile){toast("The profile was changed to "+activeProfile+" while this form was open. Close it and reopen it so the save goes to the right profile.");return}
 let original=editId?records.find(x=>String(x.id)===String(editId)):null;
- const typedPart=$("fPart").value.trim(),typedLoc=$("fLocation").value.trim();let countVal=$("fCount").value,addedLocation=null,fromAdd=false;
+ const lockedRec=(editId&&original)?original:null;const typedPart=lockedRec?String(lockedRec["Part no."]||"").trim():$("fPart").value.trim(),typedLoc=$("fLocation").value.trim();let countVal=$("fCount").value,addedLocation=null,fromAdd=false;
  // "Add part" for a part that is still an unlocated catalog row: use that row instead of creating a second copy of the part.
  if(!original&&typedPart&&typedLoc){const pk=typedPart.toUpperCase(),cat=records.find(r=>String(r["Part no."]||"").trim().toUpperCase()===pk&&!String(r.Location||"").trim()&&!COUNT_FIELDS.some(f=>isCounted(r[f])));if(cat){original=cat;fromAdd=true}}
 if(!original&&typedPart&&typedLoc){const same=records.filter(r=>String(r["Part no."]||"").trim().toUpperCase()===typedPart.toUpperCase()&&String(r.Location||"").trim());if(same.length&&!confirm(`This part already exists at: ${same.slice(0,5).map(r=>r.Location).join(", ")}${same.length>5?", …":""}.\n\nPress OK only if it is in a DIFFERENT location and you want a second row for it. Press Cancel to avoid a duplicate and edit the existing row instead.`))return}
 const baseRec=(!fromAdd&&editId&&modalRecord&&String(modalRecord.id)===String(editId))?modalRecord:original;
 if(original){const lt=Date.parse(original["Updated At"]||""),lb=String(original["Updated By"]||"").trim();if(Number.isFinite(lt)&&Math.abs(Date.now()-lt)<30000&&lb&&lb.toLowerCase()!==String(activeProfile).toLowerCase()){addNotice({type:"blocked",part:typedPart,loc:typedLoc,lines:[`${lb} saved this same part less than 30 seconds ago (${fmtDateTime(new Date(lt).toISOString())}). Your save was stopped before it was sent, to avoid overwriting their work. Your typed entry stayed in the form.`]});alert(`⚠ NOT saved.\n\n${lb} saved this same part less than 30 seconds ago (${fmtDateTime(new Date(lt).toISOString())}).\n\nTo avoid overwriting their work, wait 30 seconds, check the values on screen, then press Save again. Your typed entry is still in the form.`);return}}
 if(original&&baseRec===modalRecord){const st=staleInfo();if(st&&!confirm(`⚠ ${st.by} changed this part${st.at?" at "+st.at:""} while you were editing it:\n\n${st.list.join("\n")}\n\nPress OK to save only YOUR changes on top of theirs. If you edited the same field they changed, nothing is overwritten: your entry is kept for review.\n\nPress Cancel to go back and check first.`))return}
-let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=baseRec?.[k]??"");const keep=(v,k)=>fromAdd&&v===""?(original[k]??""):v;let obj={"Part no.":typedPart,"Part Description":keep($("fDesc").value.trim(),"Part Description"),SRP:keep($("fSrp").value,"SRP"),Cost:keep($("fCost").value,"Cost"),"End Inv.":keep($("fEnd").value,"End Inv."),Location:addedLocation||typedLoc,Remarks:keep($("fRemarks").value,"Remarks"),"Updated By":activeProfile,expectedVersion:baseRec?Number(baseRec.Version||0):0,baseSnapshot:snapshot,isNew:!original};let date=$("fDate").value;obj.countDate=date;if(countVal!=="")obj[date]=countVal;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(original?.id||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":(countVal!==""?countVal:prevCount);if(String(prevCount??"")!==String(newCount??"")){
+let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=baseRec?.[k]??"");const keep=(v,k)=>fromAdd&&v===""?(original[k]??""):v;let obj={"Part no.":typedPart,"Part Description":lockedRec?String(lockedRec["Part Description"]||""):keep($("fDesc").value.trim(),"Part Description"),SRP:keep($("fSrp").value,"SRP"),Cost:keep($("fCost").value,"Cost"),"End Inv.":keep($("fEnd").value,"End Inv."),Location:addedLocation||typedLoc,Remarks:keep($("fRemarks").value,"Remarks"),"Updated By":activeProfile,expectedVersion:baseRec?Number(baseRec.Version||0):0,baseSnapshot:snapshot,isNew:!original};let date=$("fDate").value;obj.countDate=date;if(countVal!=="")obj[date]=countVal;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(original?.id||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":(countVal!==""?countVal:prevCount);if(String(prevCount??"")!==String(newCount??"")){
  const lbl=dateLabel(date.slice(7,-1));
  const others=Object.keys(countDrafts).filter(k=>k!==date);
  let msg=`Save the count for ${lbl} only?\n\n${prevCount===""||prevCount==null?"(blank)":prevCount}  →  ${newCount===""?"(clear)":newCount}`;
@@ -1282,6 +1292,13 @@ function closeActivity(){$("activityModal").classList.remove("show")}
 $("menuActivityBtn").onclick=openActivity;$("activityClose").onclick=closeActivity;
 $("activityModal").addEventListener("click",e=>{if(e.target===$("activityModal"))closeActivity()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("activityModal").classList.contains("show"))closeActivity()});
+// Search keyboard: number pad by default; the ABC / 123 button switches to the normal keyboard and back.
+(function(){const inp=$("search"),btn=$("kbToggle");if(!inp||!btn)return;
+ const set=mode=>{inp.setAttribute("inputmode",mode);btn.textContent=mode==="numeric"?"ABC":"123";btn.dataset.mode=mode};
+ set("numeric");
+ btn.addEventListener("mousedown",e=>e.preventDefault());
+ btn.addEventListener("click",()=>{set(inp.getAttribute("inputmode")==="numeric"?"text":"numeric");inp.blur();setTimeout(()=>{inp.focus();const n=inp.value.length;try{inp.setSelectionRange(n,n)}catch(e){}},60)});
+})();
 $("menuAddBtn").onclick=()=>{setDrawer(false);openModal()};document.querySelectorAll("#drawer [data-tab]").forEach(b=>b.addEventListener("click",()=>{setDrawer(false);window.scrollTo({top:0})}));
 $("menuBtn").onclick=()=>setDrawer(!$("drawer").classList.contains("open"));$("drawerClose").onclick=$("drawerBack").onclick=()=>setDrawer(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("drawer").classList.contains("open")&&!$("exportModal").classList.contains("show"))setDrawer(false)});
