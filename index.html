@@ -55,6 +55,7 @@ table{min-width:900px}th,td{padding:4px 8px}th{font-size:10px}td{font-size:12px}
 .drawer .fileactions{display:flex;flex-direction:column;gap:8px;width:100%}.drawer .fileactions button{flex:none;width:100%;padding:11px;font-size:14px}
 .drawerlabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:10px}.drawerlabel:first-child{margin-top:0}
 .drawer .toolbar>.checker-summary{flex:none;order:0;padding:2px 0;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px}
+.draftbar{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#eaf1ff;border:1px solid #9db8f5;color:#173a7a;border-radius:12px;padding:9px 12px;margin:0 0 10px;font-size:13px}.draftbar[hidden]{display:none}.draftbar button{background:var(--blue);color:#fff;padding:7px 12px;font-size:13px;flex:none}.draftitem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.draftitem:last-child{border:0}.draftbtns{display:flex;gap:6px;flex:none}.draftbtns button{padding:6px 10px;font-size:12.5px}
 .conflictbar{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fff4e0;border:1px solid #f5b335;color:#6b4300;border-radius:12px;padding:9px 12px;margin:0 0 10px;font-size:13px}.conflictbar[hidden]{display:none}.conflictbar button{background:#f5b335;color:#1a2433;padding:7px 12px;font-size:13px;flex:none}.menudot.alert{background:#e5484d;width:10px;height:10px}
 .tabs button.addbtn{background:var(--blue);color:#fff;margin-left:auto;padding:4px 10px;font-size:12px;line-height:1.2;border-radius:8px;align-self:center}
 @media(min-width:761px){.tabs button.addbtn{padding:8px 16px;font-size:14px;border-radius:10px}}
@@ -236,6 +237,7 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
  </section>
  <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
  </div>
+<div class="draftbar" id="draftBar" hidden><span id="draftBarText"></span><button type="button" id="draftBarBtn">Open drafts</button></div>
 <div class="conflictbar" id="conflictBar" hidden><span id="conflictBarText"></span><button type="button" id="conflictBarBtn">Review</button></div>
  <section class="panel">
   <div id="importStatus" class="import-status" style="display:none"><div class="import-status-head"><span id="importTitle">Preparing import…</span><div style="display:flex;gap:6px"><button class="ghost" id="retryImportBtn" style="display:none;padding:5px 8px;font-size:11px">Retry</button><button class="ghost" id="testConnBtn" style="padding:5px 8px;font-size:11px">Test connection</button><button class="danger" id="cancelImportBtn" style="display:none;padding:5px 8px;font-size:11px">Cancel import</button><button class="danger" id="cancelAllSyncBtn2" style="display:none;padding:5px 8px;font-size:11px">Cancel all sync</button><button class="ghost" id="hideImportBtn" style="padding:5px 8px;font-size:11px">Hide</button></div></div><div class="import-progress-track"><div class="import-progress-fill" id="importProgressBar"></div></div><div class="import-status-detail" id="importDetail"></div></div>
@@ -267,7 +269,7 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
    <div class="field full"><label>Count revision history</label><div id="countHistoryList" class="history" style="border:1px solid var(--line);border-radius:10px;max-height:180px;overflow:auto;padding:9px"><small style="color:var(--muted)">No count revisions recorded.</small></div></div>
    <div class="field full"><label>Remarks</label><textarea id="fRemarks" maxlength="500" placeholder="Add observations, discrepancies, or notes..."></textarea></div>
   </div></form>
- </div><div class="modalfoot"><button class="ghost" id="cancelModal">Cancel</button><button class="primary" id="saveBtn">Save changes</button></div>
+ </div><div class="modalfoot"><button class="ghost" id="discardDraftBtn" type="button" style="display:none;margin-right:auto">Discard draft</button><button class="ghost" id="cancelModal">Cancel</button><button class="primary" id="saveBtn">Save changes</button></div>
 </div></div>
 <div class="modalback" id="exportModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle" style="width:min(440px,100%)">
  <div class="modalhead"><h2 id="exportTitle">Export report</h2><button class="ghost" id="exportClose" type="button">✕</button></div>
@@ -302,6 +304,10 @@ html:has(.modalback.show),body:has(.modalback.show){overflow:hidden;overscroll-b
  </div>
 </aside>
 <div id="hbar" hidden aria-hidden="true"><div id="hbarInner"></div></div>
+<div class="modalback" id="draftsModal"><div class="modal" role="dialog" aria-modal="true" style="width:min(520px,100%)">
+ <div class="modalhead"><h2>Unsaved drafts</h2><button class="ghost" id="draftsClose" type="button">✕</button></div>
+ <div class="modalbody"><p class="exportnote" style="margin:0 0 8px">Drafts are kept on this device until you save or discard them. Resume one, review it, then press Save changes.</p><div id="draftsList"></div></div>
+</div></div>
 <div class="toast" id="toast"></div>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz8I3-QNdbkqOgyAnwpd2hc80sxmyaUsEzJnPuqgUKRySj7eBZRe-4I-bzkvofnJ70Z8w/exec";
@@ -731,7 +737,11 @@ function render(){updateToolbarToggle();let q=$("search").value.trim().toLowerCa
  $("pendingSync").textContent=queue.length;saveLocal()}
 function countCell(v,id,variance=false){return `<span class="pill ${variance?'bad':isCounted(v)?'done':'pending'}">${!isCounted(v)?"Not counted":esc(v)}</span>`}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function attr(v){return encodeURIComponent(String(v??"" )).replace(/['!()*]/g,c=>"%"+c.charCodeAt(0).toString(16).toUpperCase())}function money(v){return v===""||v===null?"—":Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:10})}
-function openModal(r=null){modalRecord=r?{...r}:null;editId=r?r.id:null;clearCountRequested=false;currentConflictDraftId=null;$('modalTitle').textContent=r?"Edit part":"Add part";$('modalProfile').textContent=activeProfile;$('fPart').value=r?.["Part no."]||"";$('fPart').disabled=false;$('fDesc').value=r?.["Part Description"]||"";$('fSrp').value=r?.SRP??"";$('fCost').value=r?.Cost??"";$('fEnd').value=r?.["End Inv."]??"";$('fLocation').value=r?.Location||"";$('fProfile').value=activeProfile;$('fDate').value=currentDate();modalDate=currentDate();countDrafts={};$('fCount').value=r?.[currentDate()]??"";$('fRemarks').value=r?.Remarks||"";$('existingCountNote').textContent="";$('editModal').classList.add("show");updateCountContext()}
+function openModal(r=null,draft=null){modalRecord=r?{...r}:null;editId=r?r.id:null;clearCountRequested=false;currentConflictDraftId=null;$('modalTitle').textContent=r?"Edit part":"Add part";$('modalProfile').textContent=activeProfile;$('fPart').value=r?.["Part no."]||"";$('fPart').disabled=false;$('fDesc').value=r?.["Part Description"]||"";$('fSrp').value=r?.SRP??"";$('fCost').value=r?.Cost??"";$('fEnd').value=r?.["End Inv."]??"";$('fLocation').value=r?.Location||"";$('fProfile').value=activeProfile;$('fDate').value=currentDate();modalDate=currentDate();countDrafts={};$('fCount').value=r?.[currentDate()]??"";$('fRemarks').value=r?.Remarks||"";$('existingCountNote').textContent="";$('editModal').classList.add("show");updateCountContext();
+ modalBaseline=snapKey(formSnapshot());modalDraftKey=draft?draft.key:(r?"rec:"+r.id:"new:"+Date.now());
+ if(!draft&&r){const d=readFormDrafts().find(x=>x.key===modalDraftKey);if(d)draft=d}
+ if(draft){applyFormSnapshot(draft.snap);toast("Restored your unsaved draft. Save to keep it, or Discard draft.")}
+ updateDraftUI()}
 let countDrafts={},modalDate="";
 function fieldDay(f){const m=String(f).match(/\((\d{1,2})\/(\d{1,2})\/(\d{2})\)/);return m?new Date(2000+ +m[3],+m[1]-1,+m[2]):null}
 function startOfToday(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
@@ -745,9 +755,30 @@ function updateCountContext(){const date=$('fDate').value;modalDate=date;const v
  $('countByDate').querySelectorAll('button').forEach(b=>b.onclick=()=>switchCountDate(b.dataset.d));
  const history=countHistory.filter(x=>String(x.partNo||"").trim().toUpperCase()===part&&String(x.location||"").trim().toUpperCase()===loc).sort((x,y)=>new Date(y.at)-new Date(x.at));
  $('countHistoryList').innerHTML=history.length?history.map(x=>{const cd=fieldDay(x.date),ed=new Date(x.at),late=cd&&!isNaN(ed)&&new Date(ed.getFullYear(),ed.getMonth(),ed.getDate())>cd;return `<div class="historyitem ${x.date===date?'selday':''}"><div><b>${esc(dateLabel(String(x.date||"").slice(7,-1)))}: ${esc(x.previous??'blank')} → ${esc(x.current??'blank')}</b>${late?'<span class="pastbadge">Edited after count day</span>':''}<br><small>${esc(x.editedBy||'Unknown')} · ${esc(fmtDateTime(x.at))}</small></div><small>${esc(x.previousBy?'Previous counter: '+x.previousBy:'')}</small></div>`}).join(''):'<small style="color:var(--muted)">No revisions recorded for this part and location.</small>'}
-function closeModal(){ $('editModal').classList.remove("show");clearCountRequested=false;currentConflictDraftId=null }
+// ---- Unsaved form drafts: what you typed is kept on this device until you save or discard it ----
+let modalDraftKey=null,modalBaseline="",draftTimer=0;
+const FORM_IDS=["fPart","fDesc","fSrp","fCost","fEnd","fLocation","fCount","fDate","fRemarks"];
+function readFormDrafts(){try{const a=JSON.parse(localStorage.getItem("parts_form_drafts")||"[]");return Array.isArray(a)?a:[]}catch(_){return[]}}
+function writeFormDrafts(a){try{localStorage.setItem("parts_form_drafts",JSON.stringify(a))}catch(_){}updateDraftUI()}
+function formSnapshot(){const f={};FORM_IDS.forEach(id=>f[id]=$(id).value);return{fields:f,dates:countDrafts,clear:clearCountRequested}}
+function snapKey(sn){return JSON.stringify(sn.fields)+JSON.stringify(sn.dates||{})+(sn.clear?"1":"0")}
+function saveFormDraftNow(){clearTimeout(draftTimer);if(!modalDraftKey||!$("editModal").classList.contains("show"))return;
+ const sn=formSnapshot(),all=readFormDrafts().filter(d=>d.key!==modalDraftKey);
+ const dirty=snapKey(sn)!==modalBaseline,hasContent=Object.entries(sn.fields).some(([k,v])=>k!=="fDate"&&String(v).trim()!=="");
+ if(dirty&&(editId||hasContent))all.unshift({key:modalDraftKey,recordId:editId||null,savedAt:new Date().toISOString(),by:activeProfile,title:(sn.fields.fPart||"(new part)")+(sn.fields.fLocation?" · "+sn.fields.fLocation:""),snap:sn});
+ writeFormDrafts(all)}
+function scheduleDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(saveFormDraftNow,400)}
+function removeFormDraft(key){if(!key)return;writeFormDrafts(readFormDrafts().filter(d=>d.key!==key))}
+function applyFormSnapshot(sn){FORM_IDS.forEach(id=>{if(sn.fields[id]!==undefined)$(id).value=sn.fields[id]});countDrafts=sn.dates||{};clearCountRequested=!!sn.clear;modalDate=$("fDate").value;updateCountContext()}
+function updateDraftUI(){const n=readFormDrafts().length,bar=$("draftBar");if(!bar)return;bar.hidden=!n;$("draftBarText").textContent=n===1?"You have 1 unsaved draft.":`You have ${n} unsaved drafts.`;const d=$("discardDraftBtn");if(d)d.style.display=modalDraftKey&&readFormDrafts().some(x=>x.key===modalDraftKey)?"inline-block":"none"}
+function openDrafts(){const list=readFormDrafts();if(!list.length){$("draftsModal").classList.remove("show");return}
+ $("draftsList").innerHTML=list.map(d=>`<div class="draftitem"><div><b>${esc(d.title)}</b><br><small>${d.recordId?"Editing existing part":"New part"} · ${esc(d.by||"")} · ${esc(fmtDateTime(d.savedAt))}</small></div><div class="draftbtns"><button type="button" class="primary" data-resume="${esc(d.key)}">Resume</button><button type="button" class="ghost" data-del="${esc(d.key)}">Discard</button></div></div>`).join("");
+ $("draftsList").querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>{const d=readFormDrafts().find(x=>x.key===b.dataset.resume);if(!d)return;$("draftsModal").classList.remove("show");const rec=d.recordId?records.find(r=>String(r.id)===String(d.recordId)):null;if(d.recordId&&!rec){alert("That part is no longer in the list. The draft is kept so you can copy it.");return}openModal(rec,d)});
+ $("draftsList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Discard this draft?")){removeFormDraft(b.dataset.del);openDrafts()}});
+ $("draftsModal").classList.add("show")}
+function closeModal(){saveFormDraftNow();modalDraftKey=null;$('editModal').classList.remove("show");clearCountRequested=false;currentConflictDraftId=null;updateDraftUI()}
 function cancelEdit(){closeModal()}
-$('fDate').onchange=()=>switchCountDate($('fDate').value);$('fCount').addEventListener('input',()=>{stashDraft(modalDate);updateCountContext()});
+$('fDate').onchange=()=>{switchCountDate($('fDate').value);scheduleDraft()};document.getElementById('partForm').addEventListener('input',scheduleDraft);document.getElementById('partForm').addEventListener('change',scheduleDraft);$('fCount').addEventListener('input',()=>{stashDraft(modalDate);updateCountContext()});
 $('fCount').oninput=()=>{if(clearCountRequested)clearCountRequested=false};
 $('clearCountBtn').onclick=()=>{if(!modalRecord||!isCounted(modalRecord[$('fDate').value]))return;if(!confirm(`Clear the existing count for ${$('fDate').selectedOptions[0].textContent}? The previous value will remain in Count History.`))return;$('fCount').value="";clearCountRequested=true;$('existingCountNote').textContent="This count will be cleared when you save. The old value will remain in Count History."};
 function openFromRow(e){if(e.target.closest('details,button,a,input,select'))return;const row=e.target.closest('.clickrow');if(row)editPart(row.dataset.id)}
@@ -756,7 +787,7 @@ $("rows").addEventListener("click",openFromRow);$("cards").addEventListener("cli
 window.editPart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(r)openModal(r)}
 window.quickCount=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;openModal(r);$("fCount").focus()};
 async function reviewConflicts(){if(!conflictDrafts.length){toast("No conflicts to review");return}if(!netOnline()){toast("Connect to the internet to review the latest Google Sheets version");return}await load();const draft=conflictDrafts[0];if(draft.action!=="save"){alert("This pending change could not be automatically reopened. It is preserved in your local conflict backup; please inspect the current sheet before retrying.");return}const p=draft.payload||{},base=p.baseSnapshot||{},baseKey=base["Part no."]&&base.Location?recordKey(base):"",latest=records.find(r=>String(r.id)===String(p.id)||(baseKey&&recordKey(r)===baseKey)||recordKey(r)===recordKey(p));if(!latest){alert("The record no longer exists in Google Sheets. Your edit is preserved in the conflict list, but the record must be checked before creating it again.");return}const changed={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks"].forEach(k=>{if(Object.prototype.hasOwnProperty.call(p,k)&&String(p[k]??"")!==String(base[k]??""))changed[k]=p[k]});const dt=p.countDate;if(dt&&COUNT_FIELDS.includes(dt)){const attempted=Object.prototype.hasOwnProperty.call(p,dt)?p[dt]:undefined;if(p.clearCount===true||String(attempted??"")!==String(base[dt]??"")){changed[dt]=p.clearCount===true?"(clear count)":attempted}}if(!Object.keys(changed).length){alert("No changed fields could be identified in this older edit. The draft has been preserved for manual review.");return}const summary=Object.entries(changed).map(([k,v])=>`${k}: ${v}`).join("\n");if(!confirm(`This record has a newer version in Google Sheets.\n\nYour changes to reapply:\n${summary}\n\nOpen the latest version with your changes filled in? Review it, then press Save changes.`))return;openModal(latest);currentConflictDraftId=draft.id;Object.entries(changed).forEach(([k,v])=>{if(k==="Part no.")$('fPart').value=v;else if(k==="Part Description")$('fDesc').value=v;else if(k==="SRP")$('fSrp').value=v;else if(k==="Cost")$('fCost').value=v;else if(k==="End Inv.")$('fEnd').value=v;else if(k==="Location")$('fLocation').value=v;else if(k==="Remarks")$('fRemarks').value=v;else if(COUNT_FIELDS.includes(k)){$('fDate').value=k;$('fCount').value=v==="(clear count)"?"":v;clearCountRequested=v==="(clear count)";updateCountContext()}});$('existingCountNote').textContent="Conflict review: compare this proposed edit with the latest record, then save to submit it using the latest version.";toast("Review the latest record and save to reapply")}
-$('conflictBtn').onclick=reviewConflicts;$('conflictBarBtn').onclick=reviewConflicts;
+$('conflictBtn').onclick=reviewConflicts;$('draftBarBtn').onclick=openDrafts;$('draftsClose').onclick=()=>$('draftsModal').classList.remove('show');$('discardDraftBtn').onclick=()=>{if(!confirm('Discard this draft? What you typed will be lost.'))return;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal()};$('draftsModal').addEventListener('click',e=>{if(e.target===$('draftsModal'))$('draftsModal').classList.remove('show')});updateDraftUI();$('conflictBarBtn').onclick=reviewConflicts;
 window.removePart=id=>{id=decodeURIComponent(id);let r=records.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm("Delete part "+id+"? This removes the record from the shared inventory."))return;records=records.filter(x=>String(x.id)!==String(id));enqueue("delete",{id:String(id),by:activeProfile});render();toast(netOnline()?"Delete submitted…":"Delete queued until online");if(netOnline())syncQueue()}
 function enqueue(action,payload){queue.push({action,payload});saveLocal()}
 async function nativeSaveShare(name,content,type){
@@ -906,34 +937,8 @@ $('importBtn').onclick=()=>{
 };
 $('fileInput').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(importPrepReload){setImportStatus("","Reloading latest data…","Refreshing from Google Sheets before the import starts.",0,false);await importPrepReload;importPrepReload=null}await importFile(f);e.target.value=''};
 $('csvBtn').onclick=openExport;$('exportGo').onclick=exportCSV;$('exportClose').onclick=$('exportCancel').onclick=closeExport;$('exportDate').onchange=refreshExportCounts;$('exportList').onchange=refreshExportCounts;$('exportModal').addEventListener('click',e=>{if(e.target===$('exportModal'))closeExport()});
-const normTxt=v=>String(v||"").trim().toUpperCase();
-const locTokens=l=>String(l||"").split("/").map(normTxt).filter(Boolean);
 $("saveBtn").onclick=async()=>{let form=$("partForm");if(!form.reportValidity())return;let original=editId?records.find(x=>String(x.id)===String(editId)):null;
  const typedPart=$("fPart").value.trim(),typedLoc=$("fLocation").value.trim();let countVal=$("fCount").value,addedLocation=null,fromAdd=false;
- const dateSel=$("fDate").value,dateName=dateLabel(dateSel.slice(7,-1));
- if(!original&&typedLoc){
-  const ex=records.find(r=>normTxt(r["Part no."])===normTxt(typedPart)&&String(r.Location||"").trim()!=="");
-  if(ex){
-   if(locTokens(ex.Location).includes(normTxt(typedLoc))){toast(`This part is already recorded at ${typedLoc}. Open it from the list and edit it instead.`);return}
-   original=ex;fromAdd=true;
-  }
- }
- if(original&&typedLoc&&String(original.Location||"").trim()!==""&&normTxt(original.Location)!==normTxt(typedLoc)&&!locTokens(original.Location).includes(normTxt(typedLoc))){
-  const existing=original[dateSel],hasEx=isCounted(existing);
-  const typedNew=countVal!==""&&(fromAdd||countVal!==String(existing??""));
-  const combined=String(original.Location).trim()+"/"+typedLoc;
-  const sum=typedNew?(Number(hasEx?existing:0)+Number(countVal)):null;
-  const countLine=typedNew?(hasEx?`${dateName}: ${existing} + ${countVal} = ${sum}  (same date, so the quantities are added)`:`${dateName}: ${countVal}  (new count on this date)`):`${dateName}: stays ${hasEx?existing:"(blank)"}  (no new quantity typed)`;
-  const others=COUNT_FIELDS.filter(f=>f!==dateSel&&isCounted(original[f])).map(f=>`${dateLabel(f.slice(7,-1))}: ${original[f]}`);
-  const after={...original,[dateSel]:typedNew?sum:original[dateSel]},tot=totalCount(after),endv=original["End Inv."];
-  const addIt=await askConfirm({title:"Add another location?",body:`${original["Part no."]} is already recorded at ${original.Location}.\n\nLocation will become: ${combined}\n\nSaved on the date it was found:\n${countLine}\n`+(others.length?`Other dates stay as they are: ${others.join(" · ")}\n`:"")+`\nTotal after saving: ${tot===""?"(none)":tot}${isCounted(endv)?" (End Inv. "+endv+")":""}\n\nWrong date? Press No, then Cancel, and change "Count date" in the form.`,yes:"Yes, save",no:"No",delay:500});
-  if(addIt){addedLocation=combined;countVal=typedNew?String(sum):"";clearCountRequested=false}
-  else{
-   if(fromAdd)return;
-   const rep2=await askConfirm({title:"Replace the location instead?",body:`Replace ${original.Location} with ${typedLoc}? Use this only to correct a mistake; the old location will be gone from this record.\n\nPress Cancel to go back to the form (to change the date or location).`,yes:"Replace location",no:"Cancel",delay:500});
-   if(!rep2)return;
-  }
- }
 let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=original?.[k]??"");const keep=(v,k)=>fromAdd&&v===""?(original[k]??""):v;let obj={"Part no.":typedPart,"Part Description":keep($("fDesc").value.trim(),"Part Description"),SRP:keep($("fSrp").value,"SRP"),Cost:keep($("fCost").value,"Cost"),"End Inv.":keep($("fEnd").value,"End Inv."),Location:addedLocation||typedLoc,Remarks:keep($("fRemarks").value,"Remarks"),"Updated By":activeProfile,expectedVersion:original?Number(original.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if(countVal!=="")obj[date]=countVal;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(original?.id||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":(countVal!==""?countVal:prevCount);if(String(prevCount??"")!==String(newCount??"")){
  const lbl=dateLabel(date.slice(7,-1));
  const others=Object.keys(countDrafts).filter(k=>k!==date);
@@ -942,7 +947,7 @@ let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location
  if(others.length)msg+=`\n\nNot saved (other dates you typed): ${others.map(k=>dateLabel(k.slice(7,-1))).join(", ")}`;
  if(isPastDate(date)||others.length){if(!confirm(msg))return}
  obj[byKey]=newCount===""?"":activeProfile;if(newCount!=="")obj.Profile=activeProfile}
-if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
+if(original){let i=records.findIndex(x=>String(x.id)===String(original.id));if(i>=0)records[i]={...records[i],...obj,id:nextKey}}else{records.unshift({...Object.fromEntries(HEADERS.map(h=>[h,""])),...obj,id:nextKey})}enqueue("save",obj);if(currentConflictDraftId){conflictDrafts=conflictDrafts.filter(x=>x.id!==currentConflictDraftId);currentConflictDraftId=null;}clearCountRequested=false;removeFormDraft(modalDraftKey);modalDraftKey=null;closeModal();render();toast(netOnline()?"Sending changes to Google Sheets…":"Saved offline; will sync when reconnected");if(netOnline())syncQueue()};
 $("addBtn").onclick=()=>openModal();$("closeModal").onclick=cancelEdit;$("cancelModal").onclick=cancelEdit;$("editModal").onclick=e=>{if(e.target===$("editModal"))cancelEdit()};
 $("profile").onchange=e=>{activeProfile=e.target.value;localStorage.setItem("parts_profile",activeProfile);$("fProfile").value=activeProfile;toast("Active profile: "+activeProfile)};
 async function addCountDate(ds){
