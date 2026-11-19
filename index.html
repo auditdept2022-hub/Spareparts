@@ -320,6 +320,20 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 /* Tab bar removed from the page: Add part / Inventory / Activity history now live in the menu */
 .tabs{display:none!important}
 .drawer .navbtn.active{background:#eaf0fb;color:#214c91;border-color:#bfd0ee}
+/* COMPACT MENU */
+.drawerhead{padding:8px 12px!important}
+.drawerhead button{padding:4px 10px!important;min-height:0!important}
+.drawer .toolbar{padding:8px 12px 10px!important;gap:4px!important}
+.drawerlabel{font-size:10px!important;margin-top:6px!important;letter-spacing:.06em}
+.drawer .toolbar select{padding:6px 8px!important;font-size:13px!important;min-height:34px!important}
+.drawer .daterow{gap:6px!important}.drawer .daterow button{padding:6px 10px!important;font-size:12px!important;min-height:34px!important}
+.drawer .fileactions{display:grid!important;gap:5px!important;grid-template-columns:repeat(2,minmax(0,1fr))}
+.drawer .fileactions button{padding:7px 6px!important;font-size:12.5px!important;min-height:34px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:9px}
+.drawer .fileactions:has(#menuAddBtn){grid-template-columns:repeat(3,minmax(0,1fr))}
+.drawer .fileactions:has(#menuAddBtn) button{padding:7px 3px!important;font-size:12px!important}
+.drawer .fileactions:has(#refreshBtn) #refreshBtn{grid-column:1/-1}
+.drawer .fileactions #conflictBtn{grid-column:1/-1}
+.drawer .toolbar>.checker-summary{font-size:12px!important;gap:3px 10px!important;padding:0!important}
 </style>
 </head>
 <body>
@@ -348,9 +362,13 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
    <div class="mobilecards" id="cards"></div>
    <div class="foot"><span id="resultLabel">Loading records…</span><div class="pagination"><button class="ghost" id="loadMore" type="button">Load more</button></div></div>
   </div>
-  <div id="activityView" style="display:none"><div class="history" id="history"><div class="empty">No activity loaded.</div></div></div>
+  <div id="activityView" style="display:none"></div>
  </section>
 </main>
+<div class="modalback" id="activityModal"><div class="modal" role="dialog" aria-modal="true" aria-label="Activity history" style="width:min(720px,100%)">
+ <div class="modalhead"><h2>Activity history</h2><button class="ghost" id="activityClose" type="button" aria-label="Close">✕</button></div>
+ <div class="modalbody" style="padding-top:4px"><div class="history" id="history"><div class="empty">No activity loaded.</div></div></div>
+</div></div>
 <div class="modalback" id="editModal"><div class="modal">
  <div class="modalhead"><h2 id="modalTitle">Add part</h2><button class="ghost" id="closeModal">✕</button></div>
  <div class="modalbody"><div class="notice">The active profile is <b id="modalProfile">Edison</b>. Your changes will be attributed to this profile.</div><div class="notice stale" id="staleNotice" hidden></div>
@@ -395,7 +413,7 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Menu">
  <div class="drawerhead"><b>Menu</b><button type="button" class="ghost" id="drawerClose" aria-label="Close menu">✕</button></div>
  <div class="toolbar" id="toolbar">
-  <div class="fileactions"><button type="button" class="primary" id="menuAddBtn">＋ Add part</button><button type="button" class="ghost navbtn active" data-tab="inventory">Inventory</button><button type="button" class="ghost navbtn" data-tab="activity">Activity history</button></div>
+  <div class="fileactions"><button type="button" class="primary" id="menuAddBtn">＋ Add part</button><button type="button" class="ghost navbtn active" data-tab="inventory">Inventory</button><button type="button" class="ghost navbtn" id="menuActivityBtn">Activity history</button></div>
   <div class="drawerlabel">Show</div>
   <select id="filter"><option value="all">All parts</option><option value="uncounted">Not counted</option><option value="counted">Counted</option><option value="discrepancy">Discrepancies</option><option value="balanced">Balanced (count = End Inv.)</option><option value="over">Over (count &gt; End Inv.)</option><option value="short">Short (count &lt; End Inv.)</option><option value="remarks">With remarks</option></select>
   <div class="drawerlabel">Count date</div>
@@ -1259,6 +1277,11 @@ $("addDateBtn").onclick=()=>{
 $("newDateInput").onchange=e=>{const v=e.target.value;if(!v)return;const [y,mo,da]=v.split("-").map(Number);if(y<2000||y>2099){toast("Choose a date from 2000 to 2099");return}addCountDate(mo+"/"+da+"/"+String(y).slice(2))};
 function setDrawer(open){$("drawer").classList.toggle("open",open);$("drawer").setAttribute("aria-hidden",String(!open));$("drawerBack").hidden=!open;$("menuBtn").setAttribute("aria-expanded",String(open));document.documentElement.style.overflow=open?"hidden":""}
 function updateToolbarToggle(){updateConflictUI()}
+function openActivity(){setDrawer(false);try{renderHistory()}catch(e){}$("activityModal").classList.add("show")}
+function closeActivity(){$("activityModal").classList.remove("show")}
+$("menuActivityBtn").onclick=openActivity;$("activityClose").onclick=closeActivity;
+$("activityModal").addEventListener("click",e=>{if(e.target===$("activityModal"))closeActivity()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("activityModal").classList.contains("show"))closeActivity()});
 $("menuAddBtn").onclick=()=>{setDrawer(false);openModal()};document.querySelectorAll("#drawer [data-tab]").forEach(b=>b.addEventListener("click",()=>{setDrawer(false);window.scrollTo({top:0})}));
 $("menuBtn").onclick=()=>setDrawer(!$("drawer").classList.contains("open"));$("drawerClose").onclick=$("drawerBack").onclick=()=>setDrawer(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("drawer").classList.contains("open")&&!$("exportModal").classList.contains("show"))setDrawer(false)});
