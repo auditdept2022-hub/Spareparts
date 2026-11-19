@@ -312,6 +312,11 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 .stats>.stat .k{font-size:9px!important}
 .compactid{gap:5px}.compactid strong,.compactid .compactdesc{font-size:12px}
 }
+/* POPUP: Location on its own line; Count / End Inv. / Total count on one line below */
+.trio{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.formgrid>.field.locfield{grid-column:1/-1!important}
+#fTotal{background:#f1f4fa;font-weight:800;text-align:left;cursor:default}
+#fTotal.t-ok{background:#d9f2e3;color:#0d5c39}#fTotal.t-over{background:#fff3c4;color:#7a5a00}#fTotal.t-short{background:#f8d3d6;color:#8f1f2c}
 </style>
 </head>
 <body>
@@ -353,10 +358,11 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
    <div class="field" hidden><label>Cost</label><input id="fCost" type="number" step="any" min="0" inputmode="decimal"></div>
    <div class="field"><label>Profile / active counter</label><input id="fProfile" disabled value=""></div>
    <div class="field"><label>Count date</label><select id="fDate"><option value="Count (12/3/26)">Dec 3, 2026</option><option value="Count (12/4/26)">Dec 4, 2026</option><option value="Count (12/5/26)">Dec 5, 2026</option><option value="Count (12/6/26)">Dec 6, 2026</option></select></div>
+   <div class="field full locfield"><label>Location</label><input id="fLocation" placeholder="Shelf / Location" required></div>
    <div class="trio">
-    <div class="field"><label>Location</label><input id="fLocation" placeholder="Shelf / Location" required></div>
     <div class="field"><label>Count</label><input id="fCount" type="number" step="1" min="0" inputmode="numeric" placeholder="Qty"></div>
     <div class="field"><label>End Inv.</label><input id="fEnd" type="number" step="1" inputmode="numeric"></div>
+    <div class="field"><label>Total count</label><input id="fTotal" readonly tabindex="-1" aria-label="Total count of all dates" value="—"></div>
    </div>
    <div class="field full countextras"><div id="countByDate"></div><small id="existingCountNote" style="display:block;color:var(--muted)">No count entered for this date yet.</small><button type="button" class="ghost" id="clearCountBtn" style="display:none;margin-top:8px">Clear this date's count</button></div>
    <div class="field full"><label>Count revision history</label><div id="countHistoryList" class="history" style="border:1px solid var(--line);border-radius:10px;max-height:180px;overflow:auto;padding:9px"><small style="color:var(--muted)">No count revisions recorded.</small></div></div>
@@ -890,7 +896,12 @@ function updateCountContext(){const date=$('fDate').value;modalDate=date;refresh
  $('countByDate').innerHTML=COUNT_FIELDS.map(f=>{const v=modalRecord?.[f],by=modalRecord?.["Counted By ("+f.slice(7,-1)+")"],dr=countDrafts[f],txt=dr?(dr.clear?"clear":dr.v)+" ●":(isCounted(v)?v:"—");const endV=modalRecord?.["End Inv."],shown=dr?(dr.clear?"":dr.v):v,diff=(()=>{if(!isCounted(endV)||!Number.isFinite(Number(endV)))return null;let tot=0,any=false;COUNT_FIELDS.forEach(g=>{const d2=countDrafts[g],x=d2?(d2.clear?"":d2.v):modalRecord?.[g];if(isCounted(x)&&Number.isFinite(Number(x))){tot+=Number(x);any=true}});return any?tot-Number(endV):null})(),dcls=diff===null?"":diff===0?"d-ok":diff>0?"d-over":"d-short",dtxt=diff===null?"":" · Total of all dates: "+(diff===0?"Balanced":diff>0?"Over by "+diff:"Short by "+(-diff));return `<button type="button" data-d="${esc(f)}" class="${f===date?'sel':''} ${dr?'draft':''} ${dcls}" title="${esc(isCounted(v)?'Saved: '+v+(by?' by '+by:''):'Not counted')}${dr?' · unsaved':''}${dtxt}">${esc(dateLabel(f.slice(7,-1)).slice(0,5))}: ${esc(txt)}</button>`}).join('');
  $('countByDate').querySelectorAll('button').forEach(b=>b.onclick=()=>switchCountDate(b.dataset.d));
  const history=countHistory.filter(x=>String(x.partNo||"").trim().toUpperCase()===part&&String(x.location||"").trim().toUpperCase()===loc).sort((x,y)=>new Date(y.at)-new Date(x.at));
- $('countHistoryList').innerHTML=history.length?history.map(x=>{const cd=fieldDay(x.date),ed=new Date(x.at),late=cd&&!isNaN(ed)&&new Date(ed.getFullYear(),ed.getMonth(),ed.getDate())>cd,blank=v=>v===undefined||v===null||String(v).trim()==="",pv=blank(x.previous),cv=blank(x.current),kind=pv&&!cv?"First count":!pv&&cv?"Count cleared":"Count changed",line=pv&&!cv?"entered "+x.current:!pv&&cv?"removed "+x.previous:"changed from "+x.previous+" to "+x.current,who=namesOnly(x.editedBy)||"Unknown",prev=namesOnly(x.previousBy),src=String(x.source||"").trim();return `<div class="historyitem ${x.date===date?'selday':''}"><div><b>${esc(dateLabel(String(x.date||"").slice(7,-1)))} count: ${esc(line)}</b><small>${esc(kind)} by ${esc(who)} on ${esc(fmtDateTime(x.at))}${prev?' · Previously counted by '+esc(prev):''}${src?' · via '+esc(src):''}</small>${late?'<span class="pastbadge">Edited after count day</span>':''}</div></div>`}).join(''):'<small style="color:var(--muted)">No revisions recorded for this part and location.</small>'}
+ $('countHistoryList').innerHTML=history.length?history.map(x=>{const cd=fieldDay(x.date),ed=new Date(x.at),late=cd&&!isNaN(ed)&&new Date(ed.getFullYear(),ed.getMonth(),ed.getDate())>cd,blank=v=>v===undefined||v===null||String(v).trim()==="",pv=blank(x.previous),cv=blank(x.current),kind=pv&&!cv?"First count":!pv&&cv?"Count cleared":"Count changed",line=pv&&!cv?"entered "+x.current:!pv&&cv?"removed "+x.previous:"changed from "+x.previous+" to "+x.current,who=namesOnly(x.editedBy)||"Unknown",prev=namesOnly(x.previousBy),src=String(x.source||"").trim();return `<div class="historyitem ${x.date===date?'selday':''}"><div><b>${esc(dateLabel(String(x.date||"").slice(7,-1)))} count: ${esc(line)}</b><small>${esc(kind)} by ${esc(who)} on ${esc(fmtDateTime(x.at))}${prev?' · Previously counted by '+esc(prev):''}${src?' · via '+esc(src):''}</small>${late?'<span class="pastbadge">Edited after count day</span>':''}</div></div>`}).join(''):'<small style="color:var(--muted)">No revisions recorded for this part and location.</small>';updateTotalCount()}
+
+// ---- Popup: Total count = all dates added together (uses what is typed right now), compared with End Inv. ----
+function updateTotalCount(){const el=$("fTotal");if(!el)return;const cur=$("fDate").value;let tot=0,any=false;COUNT_FIELDS.forEach(f=>{let x;if(f===cur)x=clearCountRequested?"":$("fCount").value;else{const d=countDrafts[f];x=d?(d.clear?"":d.v):modalRecord?.[f]}if(isCounted(x)&&String(x).trim()!==""&&Number.isFinite(Number(x))){tot+=Number(x);any=true}});el.value=any?String(tot):"—";const e=$("fEnd").value;el.classList.remove("t-ok","t-over","t-short");if(any&&String(e).trim()!==""&&Number.isFinite(Number(e))){const d=tot-Number(e);el.classList.add(d===0?"t-ok":d>0?"t-over":"t-short")}}
+["fCount","fEnd","fDate"].forEach(id=>{const e=$(id);if(e){e.addEventListener("input",updateTotalCount);e.addEventListener("change",updateTotalCount)}});
+$("clearCountBtn").addEventListener("click",()=>setTimeout(updateTotalCount,0));
 // ---- Unsaved form drafts: what you typed is kept on this device until you save or discard it ----
 let modalDraftKey=null,modalBaseline="",draftTimer=0,modalOwner="";
 function myDrafts(){return readFormDrafts().filter(d=>String(d.by||"")===activeProfile)}
