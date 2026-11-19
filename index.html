@@ -400,6 +400,18 @@ input.locked:disabled{opacity:1;-webkit-text-fill-color:#5b6b82}
   </div></form>
  </div><div class="modalfoot"><button class="ghost" id="discardDraftBtn" type="button" style="display:none;margin-right:auto">Discard draft</button><button class="ghost" id="cancelModal">Cancel</button><button class="primary" id="saveBtn">Save changes</button></div>
 </div></div>
+<div class="modalback" id="wipeModal"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="wipeTitle" style="width:min(460px,100%)">
+ <div class="modalhead"><h2 id="wipeTitle" style="color:#b52e3c">⚠ Replace ALL data?</h2></div>
+ <div class="modalbody">
+  <p id="wipeSummary" style="margin:0 0 10px;font-size:13px"></p>
+  <div style="background:#fff0f1;border:1px solid #f0c3c8;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;color:#7a1f2a">
+   <b>Warning:</b> importing will <b>erase everything</b> in Google Sheets first: Inventory, counts, Activity Log, Count History, Change Log and Conflicts. Only the rows from the new file will remain. Importing may change or lose all your current data, and <b>this cannot be undone</b>.
+   <br><br>Other devices will reload and also lose their old data. Export a CSV first if you want a backup.
+  </div>
+  <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px"><input type="checkbox" id="wipeAck" style="margin-top:3px"><span>I understand all current data will be erased and replaced.</span></label>
+ </div>
+ <div class="modalfoot"><button class="ghost" id="wipeNo" type="button">Cancel</button><button class="danger" id="wipeYes" type="button" disabled>Erase &amp; import</button></div>
+</div></div>
 <div class="modalback" id="exportModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle" style="width:min(440px,100%)">
  <div class="modalhead"><h2 id="exportTitle">Export report</h2><button class="ghost" id="exportClose" type="button">✕</button></div>
  <div class="modalbody">
@@ -617,7 +629,7 @@ async function load(){
  if(syncCursors&&!hasLocalInventory){syncCursors=null;localStorage.removeItem("parts_cursors")}
  try{
   let res=await jsonp({action:"list"});
-  if(res.dates)setCountDates(res.dates);records=(res.records||[]).map(normalize);localRecords=records;activity=res.activity||[];countHistory=res.countHistory||[];
+  if(res.dates)setCountDates(res.dates);records=(res.records||[]).map(normalize);localRecords=records;setDataEpoch(res.epoch===undefined?"0":res.epoch);activity=res.activity||[];countHistory=res.countHistory||[];
   syncCursors=res.cursors||{changes:0,activity:activity.length,history:countHistory.length};saveCursors();saveLocal();render();renderHistory();
   if(queue.length)syncQueue();
  }catch(e){records=localRecords;render();toast("Using cached data: "+e.message)}
@@ -630,7 +642,7 @@ async function refreshFromSheets(){
  try{
   while(more&&rounds++<30){
    const res=await jsonp({action:"changes",since:syncCursors.changes||0,activitySince:syncCursors.activity||0,historySince:syncCursors.history||0});
-   if(res.resetRequired){syncCursors=null;localStorage.removeItem("parts_cursors");await load();return}
+   if(res.resetRequired||(res.epoch!==undefined&&String(res.epoch)!==dataEpoch)){syncCursors=null;localStorage.removeItem("parts_cursors");records=[];localRecords=[];await load();return}
    if(res.dates&&setCountDates(res.dates))anyChanged=true;(res.changes||[]).forEach(change=>{if(applyDeltaRecord(change))anyChanged=true});
    if(res.activity?.length){activity=[...res.activity.reverse(),...activity].slice(0,150);anyChanged=true}
    if(res.countHistory?.length){countHistory=[...res.countHistory.reverse(),...countHistory].slice(0,500);anyChanged=true}
@@ -1176,6 +1188,25 @@ function makeImportBatches(rows,fileName){
  if(current.length)batches.push(current);
  return batches;
 }
+let dataEpoch=localStorage.getItem("parts_epoch")||"0";
+function setDataEpoch(v){if(v===undefined||v===null)return;dataEpoch=String(v);try{localStorage.setItem("parts_epoch",dataEpoch)}catch(e){}}
+function confirmWipe(count,fileName){
+ return new Promise(resolve=>{
+  const m=$("wipeModal"),ack=$("wipeAck"),yes=$("wipeYes"),no=$("wipeNo");
+  $("wipeSummary").textContent=`Importing "${fileName}" (${count.toLocaleString()} parts) will replace everything currently in the app and in Google Sheets.`;
+  ack.checked=false;yes.disabled=true;
+  const done=v=>{m.classList.remove("show");ack.onchange=yes.onclick=no.onclick=null;resolve(v)};
+  ack.onchange=()=>{yes.disabled=!ack.checked};
+  yes.onclick=()=>done(true);no.onclick=()=>done(false);
+  m.classList.add("show");
+ });
+}
+function resetLocalData(cursors,epoch){
+ records=[];localRecords=[];activity=[];countHistory=[];conflictDrafts=[];notices=[];
+ try{localStorage.removeItem("parts_notices")}catch(e){}
+ syncCursors=cursors||{changes:0,activity:0,history:0};saveCursors();setDataEpoch(epoch);
+ saveLocal();render();try{renderHistory()}catch(e){}
+}
 async function importFile(file){
  if(queue.length||isSyncing)throw Error('Please let the pending changes finish synchronizing before starting a new import.');
  importReading=true;cancelImportRequested=false;updateImportControls();
@@ -1204,9 +1235,15 @@ async function importFile(file){
   if(duplicateCount)throw Error(`The selected sheet contains ${duplicateCount} duplicate Part no. values. Remove duplicates before importing so no catalog row is ambiguous.`);
   const batches=makeImportBatches(normalized,file.name),totalBatches=batches.length;
   const summary=`Read ${normalized.length.toLocaleString()} valid parts from ${sourceSheet}${totalRows?` (${totalRows} Total summary row skipped)`:''}. Only Part no., Part Description, SRP, Cost, and End Inv. will be imported to Google Sheets → Inventory. ${totalBatches} size-optimized batches will be used; the other inventory fields remain blank on new catalog rows.`;
-  if(!confirm(summary+`\n\nSend ${normalized.length.toLocaleString()} rows to Google Sheets in ${totalBatches} batches?`)){
-   importReading=false;setImportStatus("", "Import not started", "You cancelled at the confirmation step. No rows were uploaded.", 0, false);return;
+  importReading=false;updateImportControls();
+  if(!(await confirmWipe(normalized.length,file.name))){
+   setImportStatus("", "Import not started", "You cancelled. Nothing was erased and no rows were uploaded.", 0, false);return;
   }
+  importReading=true;updateImportControls();
+  setImportStatus("", "Erasing existing data…", "Clearing Inventory, Activity Log, Count History, Change Log and Conflicts in Google Sheets.", 5, false);
+  const wiped=await jsonp({action:"clearall",payload:JSON.stringify({by:activeProfile})},90000);
+  resetLocalData(wiped.cursors,wiped.epoch);
+  setImportStatus("", "Old data erased", summary, 15, false);
   assertImportNotCancelled();
   window.__importState={expected:normalized.length,imported:0,added:0,updated:0,changed:0,unchanged:0,confirmedBatches:0,totalBatches,partNumbers,fileName:file.name,lastError:"",failedBatch:0};
   window.__importLastError="";window.__importFailedBatch=0;persistImportState();
