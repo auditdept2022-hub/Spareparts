@@ -240,13 +240,17 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 .stat .k{font-size:11px!important;line-height:1.2}
 .stat strong{font-size:19px!important;margin-top:1px!important;line-height:1.15}
 .stat small{font-size:10.5px!important;line-height:1.2;display:block!important}
+.stat .ls{display:none}
 @media(max-width:760px){
-.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;margin-bottom:8px!important}
-.stat{padding:7px 11px!important;border-radius:10px!important;min-width:0;display:flex;flex-direction:column;justify-content:center}
-.stat .k{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat strong{font-size:18px!important;margin-top:1px!important;white-space:nowrap}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;margin-bottom:6px!important}
+.stat{padding:5px 6px!important;border-radius:9px!important;min-width:0;display:block!important;text-align:center}
+.stat .lf{display:none}.stat .ls{display:inline}
+.stat .k{font-size:10px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat strong{font-size:16px!important;margin:1px 0 0!important;white-space:nowrap}
+.stat.prog strong{font-size:15px!important}
 .stat small{display:none!important}
-.stat.prog small{display:block!important;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.stat.prog small{display:block!important;font-size:9px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
+.stat .pdate{display:none}
 }
 </style>
 </head>
@@ -259,10 +263,10 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 <main class="wrap">
  <div class="stickyarea" id="stickyArea">
  <section class="stats">
-  <div class="stat"><div class="k">Total parts</div><strong id="totalParts">—</strong><small>Inventory records</small></div>
-  <div class="stat prog"><div class="k">Checked progress</div><strong><span id="countedToday">—</span><span class="of"> / <span id="progTotal">—</span></span></strong><small id="todayLabel">Selected date</small></div>
-  <div class="stat"><div class="k">Discrepancies</div><strong id="discrepancies">—</strong><small>Count differs from End Inv.</small></div>
-  <div class="stat"><div class="k">Pending sync</div><strong id="pendingSync">0</strong><small>Changes saved on this device</small></div>
+  <div class="stat"><div class="k"><span class="lf">Total parts</span><span class="ls">Total</span></div><strong id="totalParts">—</strong><small>Inventory records</small></div>
+  <div class="stat prog"><div class="k"><span class="lf">Checked progress</span><span class="ls">Checked</span></div><strong><span id="countedToday">—</span><span class="of"> / <span id="progTotal">—</span></span></strong><small><span id="todayLabel">Selected date</span><span class="pdate" id="progDate"></span></small></div>
+  <div class="stat"><div class="k"><span class="lf">Discrepancies</span><span class="ls">Differences</span></div><strong id="discrepancies">—</strong><small>Count differs from End Inv.</small></div>
+  <div class="stat"><div class="k"><span class="lf">Pending sync</span><span class="ls">Pending</span></div><strong id="pendingSync">0</strong><small>Changes saved on this device</small></div>
  </section>
  <div class="search"><span>⌕</span><input id="search" placeholder="Search part no., description, location..." autocomplete="off"></div>
  </div>
@@ -795,7 +799,7 @@ function counterList(r,dt){return String(counterFor(r,dt)||"").split("/").map(x=
 function counterFor(r,dt){return r["Counted By ("+dt.slice(7,-1)+")"]||(isCounted(r[dt])?r.Profile:"")||""}
 function balClass(r,dt){const b=balanceFor(r,dt);return b===""?"":b===0?"bal-ok":b>0?"bal-over":"bal-short"}
 function statusFor(r,dt){let b=balanceFor(r,dt);return b===""?"—":b===0?"Balanced":b>0?"Over":"Short"}
-function updateStats(){const dt=currentDate();if(!dt)return;let counted=0,variance=0;for(const r of records){if(isCounted(r[dt]))counted++;if(isVariance(r,dt))variance++}const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set("totalParts",records.length.toLocaleString());set("countedToday",counted.toLocaleString());set("discrepancies",variance.toLocaleString());set("pendingSync",String(queue.length));set("progTotal",records.length.toLocaleString());const pct=records.length?counted/records.length*100:0;set("todayLabel",(Math.round(pct*10)/10)+"% checked · "+($("countDate").selectedOptions[0]?.textContent||""))}
+function updateStats(){const dt=currentDate();if(!dt)return;let counted=0,variance=0;for(const r of records){if(isCounted(r[dt]))counted++;if(isVariance(r,dt))variance++}const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set("totalParts",records.length.toLocaleString());set("countedToday",counted.toLocaleString());set("discrepancies",variance.toLocaleString());set("pendingSync",String(queue.length));set("progTotal",records.length.toLocaleString());const pct=records.length?counted/records.length*100:0;set("todayLabel",(Math.round(pct*10)/10)+"% checked");set("progDate"," · "+($("countDate").selectedOptions[0]?.textContent||""))}
 function renderCountHeads(dt){const tr=document.querySelector("thead tr"),anchor=tr.querySelector('th[data-sort="remarks"]');tr.querySelectorAll("th.countcol").forEach(t=>t.remove());COUNT_FIELDS.forEach(f=>{const th=document.createElement("th");th.className="sortable countcol";th.dataset.sort="count:"+f;th.innerHTML='<span class="hl">'+dateLabel(f.slice(7,-1))+'</span><span class="sortarrows"><i data-dir="asc" title="Sort ascending">▲</i><i data-dir="desc" title="Sort descending">▼</i></span>';tr.insertBefore(th,anchor)});updateSortUI()}
 function render(){updateToolbarToggle();let q=$("search").value.trim().toLowerCase(),filter=$("filter").value,dt=currentDate();let filtered=records.filter(r=>{let hay=[r["Part no."],r["Part Description"],r.Location,r.Remarks].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;let c=r[dt];if(filter==="counted"&&!isCounted(c))return false;if(filter==="uncounted"&&isCounted(c))return false;if(filter==="discrepancy"&&!isVariance(r,dt))return false;if(filter==="balanced"&&balanceFor(r,dt)!==0)return false;if(filter==="over"&&!(balanceFor(r,dt)>0))return false;if(filter==="short"&&!(balanceFor(r,dt)!==""&&balanceFor(r,dt)<0))return false;if(filter==="remarks"&&!String(r.Remarks||"").trim())return false;return true});filtered=sortRows(filtered,dt);updateStats();renderCountHeads(dt);
  let checkerCounts=PROFILES.map(name=>({name,count:records.filter(r=>isCounted(r[dt])&&counterList(r,dt).some(x=>x.toLowerCase()===name.toLowerCase())).length}));$("checkerSummary").innerHTML='<span><b>Counted by:</b></span>'+checkerCounts.map(x=>`<span>${esc(x.name)} <b>${x.count}</b></span>`).join('');
