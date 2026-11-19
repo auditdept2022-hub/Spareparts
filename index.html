@@ -676,6 +676,7 @@ async function syncQueue(){
      persistImportState();
     }
     // Chain same-device saves using the version returned by the server.
+    if(item.action==="save"&&response.skipped&&response.skipped.length){const nm=f=>f==="Part Description"?"Description":/^Count \(/.test(f)?"Count "+dateLabel(f.slice(7,-1)):f;const txt=response.skipped.map(s=>`• ${nm(s.field)}: your ${s.yours===""?"blank":s.yours}, theirs ${s.theirs===""?"blank":s.theirs}`).join("\n");setTimeout(()=>alert(`✔ Saved your other changes.\n\n⚠ NOT saved, because someone else changed these first (their values were kept):\n${txt}\n\nCheck them and save again if yours is the right one.`),50)}
     if(item.action==="save"&&response.mergedOver&&response.mergedOver.by){window.__mergedNotice=response.mergedOver;setTimeout(()=>toast(`ℹ ${response.mergedOver.by} changed this part at the same time. Your changes were added on top, theirs were kept.`),50)}
     if(item.action==="save"&&response.version!==undefined){
      const savedId=String(response.id||item.payload.id||"");
@@ -710,7 +711,7 @@ async function syncQueue(){
  // conflicting requests still require a delta check to reconcile the latest state.
  if(!receivedCursors||failed||conflictCount)await refreshFromSheets();
  pruneSavedDrafts();
- if(conflictCount){const last=conflictDrafts[0]&&conflictDrafts[0].reason?String(conflictDrafts[0].reason).replace(/^.*?CONFLICT:\s*/,""):"";toast(`⚠ ${conflictCount} edit(s) NOT saved: someone changed the same part at the same time.`);setTimeout(()=>alert(`⚠ Your edit was NOT saved because someone else changed the same part at the same time. Nothing was overwritten.\n\n${last}`),50)}
+ if(conflictCount){const last=conflictDrafts[0]&&conflictDrafts[0].reason?String(conflictDrafts[0].reason).replace(/^.*?CONFLICT:\s*/,""):"";toast(`⚠ ${conflictCount} edit(s) NOT saved: someone changed the same field or saved at the same time.`);setTimeout(()=>alert(`⚠ Your edit was NOT saved because someone else changed the same field at the same time. Nothing was overwritten.\n\n${last}`),50)}
  else if(!wasCancelled&&!queue.length&&!failed){
   if(window.__importState){
    const st=window.__importState;
@@ -745,9 +746,11 @@ function totalCount(r){let sum=0,any=false;COUNT_FIELDS.forEach(f=>{const v=r[f]
 function isVariance(r,dt){const b=balanceFor(r,dt);return b!==""&&b!==0}
 // Balance compares the TOTAL counted across all count dates with End Inv.
 function balanceFor(r,dt){const t=totalCount(r),e=r["End Inv."];return t!==""&&isCounted(e)&&Number.isFinite(Number(e))?t-Number(e):""}
-function mergeChains(...a){let o="";a.forEach(s=>String(s||"").split("/").map(x=>x.trim()).filter(Boolean).forEach(n=>{o=addCounter(o,n)}));return o}
-function addCounter(existing,name){const list=String(existing||"").split("/").map(x=>x.trim()).filter(Boolean),who=String(name||"").trim();if(who&&!list.some(x=>x.toLowerCase()===who.toLowerCase()))list.push(who);return list.join("/")}
-function counterList(r,dt){return String(counterFor(r,dt)||"").split("/").map(x=>x.trim()).filter(Boolean)}
+function chainName(e){return String(e||"").replace(/\s*\(.*\)\s*$/,"").trim()}
+function addEntry(existing,entry){const list=String(existing||"").split("/").map(x=>x.trim()).filter(Boolean),e=String(entry||"").trim();if(e&&!list.some(x=>chainName(x).toLowerCase()===chainName(e).toLowerCase()))list.push(e);return list.join("/")}
+function mergeChains(...a){let o="";a.forEach(s=>String(s||"").split("/").map(x=>x.trim()).filter(Boolean).forEach(n=>{o=addEntry(o,n)}));return o}
+function addCounter(existing,name){const who=String(name||"").trim();if(!who)return String(existing||"");const t=new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});return addEntry(existing,who+" ("+t+")")}
+function counterList(r,dt){return String(counterFor(r,dt)||"").split("/").map(x=>chainName(x)).filter(Boolean)}
 function counterFor(r,dt){return r["Counted By ("+dt.slice(7,-1)+")"]||(isCounted(r[dt])?r.Profile:"")||""}
 function balClass(r,dt){const b=balanceFor(r,dt);return b===""?"":b===0?"bal-ok":b>0?"bal-over":"bal-short"}
 function statusFor(r,dt){let b=balanceFor(r,dt);return b===""?"—":b===0?"Balanced":b>0?"Over":"Short"}
@@ -1018,7 +1021,7 @@ let original=editId?records.find(x=>String(x.id)===String(editId)):null;
  // "Add part" for a part that is still an unlocated catalog row: use that row instead of creating a second copy of the part.
  if(!original&&typedPart&&typedLoc){const pk=typedPart.toUpperCase(),cat=records.find(r=>String(r["Part no."]||"").trim().toUpperCase()===pk&&!String(r.Location||"").trim()&&!COUNT_FIELDS.some(f=>isCounted(r[f])));if(cat){original=cat;fromAdd=true}}
 const baseRec=(!fromAdd&&editId&&modalRecord&&String(modalRecord.id)===String(editId))?modalRecord:original;
-if(original){const lt=Date.parse(original["Updated At"]||""),lb=String(original["Updated By"]||"").trim();if(Number.isFinite(lt)&&Math.abs(Date.now()-lt)<60000&&lb&&lb.toLowerCase()!==String(activeProfile).toLowerCase()){alert(`⚠ NOT saved.\n\n${lb} saved this same part less than a minute ago (${fmtDateTime(new Date(lt).toISOString())}).\n\nTo avoid overwriting their work, wait until the next minute, check the values on screen, then press Save again. Your typed entry is still in the form.`);return}}
+if(original){const lt=Date.parse(original["Updated At"]||""),lb=String(original["Updated By"]||"").trim();if(Number.isFinite(lt)&&Math.abs(Date.now()-lt)<30000&&lb&&lb.toLowerCase()!==String(activeProfile).toLowerCase()){alert(`⚠ NOT saved.\n\n${lb} saved this same part less than 30 seconds ago (${fmtDateTime(new Date(lt).toISOString())}).\n\nTo avoid overwriting their work, wait 30 seconds, check the values on screen, then press Save again. Your typed entry is still in the form.`);return}}
 if(original&&baseRec===modalRecord){const st=staleInfo();if(st&&!confirm(`⚠ ${st.by} changed this part${st.at?" at "+st.at:""} while you were editing it:\n\n${st.list.join("\n")}\n\nPress OK to save only YOUR changes on top of theirs. If you edited the same field they changed, nothing is overwritten: your entry is kept for review.\n\nPress Cancel to go back and check first.`))return}
 let snapshot={};["Part no.","Part Description","SRP","Cost","End Inv.","Location","Remarks",...COUNT_FIELDS].forEach(k=>snapshot[k]=baseRec?.[k]??"");const keep=(v,k)=>fromAdd&&v===""?(original[k]??""):v;let obj={"Part no.":typedPart,"Part Description":keep($("fDesc").value.trim(),"Part Description"),SRP:keep($("fSrp").value,"SRP"),Cost:keep($("fCost").value,"Cost"),"End Inv.":keep($("fEnd").value,"End Inv."),Location:addedLocation||typedLoc,Remarks:keep($("fRemarks").value,"Remarks"),"Updated By":activeProfile,expectedVersion:baseRec?Number(baseRec.Version||0):0,baseSnapshot:snapshot};let date=$("fDate").value;obj.countDate=date;if(countVal!=="")obj[date]=countVal;if(clearCountRequested)obj.clearCount=true;let nextKey=recordKey(obj);if(records.some(x=>String(x.id)!==String(original?.id||"")&&recordKey(x)===nextKey)){toast("This part already exists at this location");return}obj.id=original?.id||nextKey;if(encodeURIComponent(JSON.stringify(obj)).length>6500){toast("This entry is too long to send safely. Shorten the remarks or description and save again.");return}const byKey="Counted By ("+date.slice(7,-1)+")";const prevCount=original?original[date]:"";const newCount=clearCountRequested?"":(countVal!==""?countVal:prevCount);if(String(prevCount??"")!==String(newCount??"")){
  const lbl=dateLabel(date.slice(7,-1));
