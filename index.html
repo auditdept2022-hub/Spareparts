@@ -271,6 +271,18 @@ td.countcol{text-align:center;white-space:nowrap}th.countcol{white-space:nowrap}
 .trirow .tn b{color:#6b7a90}.trirow .tn i::before{color:#9aa6b8}
 @media(min-width:761px){.stats{grid-template-columns:1fr 1.2fr 1fr 1.8fr!important}}
 @media(max-width:760px){.stats{grid-template-columns:.8fr 1fr 1fr 2fr!important}.trirow b{font-size:13px}.trirow>span{padding:0 2px}}
+/* Count result: scales to its own width */
+.stat.tri{container-type:inline-size;min-width:0}
+.stat.tri .trirow{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));margin:2px 0 0!important}
+.stat.tri .trirow>span{padding:0 clamp(3px,2.2cqw,8px)!important;align-items:flex-start!important;min-width:0}
+.stat.tri .trirow>span:first-child{padding-left:0!important}
+.stat.tri .trirow b{font-size:clamp(12px,5.6cqw,16px)!important;line-height:1.1}
+.stat.tri .trirow i{font-size:clamp(7.5px,3cqw,9.5px)!important;gap:3px!important;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.stat.tri .trirow i::before{width:5px!important;height:5px!important}
+.stat.tri .k{font-size:clamp(9px,3.6cqw,11px)!important}
+.stat.tri .lf{display:inline!important}.stat.tri .ls{display:none!important}
+@container (max-width:250px){.stat.tri .lf{display:none!important}.stat.tri .ls{display:inline!important}}
+@media(max-width:760px){.stat.tri{padding:5px 8px!important}.stat.tri .trirow{text-align:left}}
 </style>
 </head>
 <body>
